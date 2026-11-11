@@ -190,9 +190,9 @@ export const VideoSection: React.FC = () => {
               </div>
 
               <div className="p-4 bg-surface-container-lowest text-on-surface">
-                <h3 className="font-heading font-bold text-base text-primary">
+                <h4 id="video-modal-heading" className="font-heading font-bold text-base text-primary">
                   {activeVideo.title}
-                </h3>
+                </h4>
                 <p className="text-xs text-text-muted mt-1">
                   {activeVideo.description}
                 </p>

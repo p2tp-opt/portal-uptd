@@ -178,9 +178,18 @@ export const Footer: React.FC = () => {
           <span>
             © {currentYear} UPTD Pengembangan Perlindungan Tanaman Perkebunan — Pemerintah Provinsi Kalimantan Timur.
           </span>
-          <span className="text-outline">
-            Hak Cipta Dilindungi Undang-Undang Republik Indonesia.
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-outline">
+              Hak Cipta Dilindungi Undang-Undang Republik Indonesia.
+            </span>
+            <span className="text-outline">|</span>
+            <Link
+              to="/admin/login"
+              className="text-tertiary-fixed hover:text-white transition-colors underline font-medium"
+            >
+              Login Operator
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

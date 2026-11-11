@@ -19,6 +19,16 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 ## [Belum Dirilis]
 
 ### Ditambahkan
+- Panel Admin & CMS Khusus Operator (`/admin/login` & `/admin/*`):
+  - Autentikasi dan sesi operator dengan proteksi rute `AdminGuard`.
+  - Dashboard ringkasan metrik konten & status verifikasi data resmi.
+  - CRUD Berita & Artikel: form tambah, modal edit, dan hapus dengan preview cover.
+  - CRUD Agenda Kegiatan Lapangan: form tambah, ubah status (akan datang/selesai), dan hapus.
+  - CRUD Publikasi & SOP: form tambah nama dokumen, kategori, ukuran, tipe, dan link berkas.
+  - CRUD Galeri Dokumentasi Foto (dengan input alt text ramah tunanetra) & Video Edukasi.
+  - Pengaturan Profil & Kontak: form pengubahan nama instansi, alamat, nomor telepon/hotline, email, jam layanan, dan sakelar status verifikasi.
+- Peningkatan `ContentRepository` dengan `LocalStorageContentRepository` yang mendukung persistensi interaktif langsung di browser dan siap dialihkan ke Supabase PostgreSQL pada tahap database.
+- Tautan pintas `Login Operator` di bagian copyright footer website publik.
 - Inisialisasi React + Vite + TypeScript + Tailwind CSS + React Router DOM + Lucide React.
 - Konfigurasi Tailwind dengan sistem token warna Kaltim dan tipografi Plus Jakarta Sans & Inter.
 - Lapisan abstraksi data `ContentRepository` dan `StaticContentRepository` di `src/services/contentRepository.ts`.

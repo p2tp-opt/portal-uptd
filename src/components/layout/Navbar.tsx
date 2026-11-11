@@ -67,7 +67,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-14 flex items-center justify-between gap-4">
           {/* Menu Desktop */}
-          <div className="hidden xl:flex items-center gap-1 font-heading text-sm">
+          <div className="hidden lg:flex items-center gap-1 font-heading text-sm">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
@@ -87,7 +87,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Tombol Hamburger Mobile */}
-          <div className="xl:hidden flex items-center">
+          <div className="lg:hidden flex items-center">
             <button
               ref={menuButtonRef}
               type="button"
@@ -99,7 +99,7 @@ export const Navbar: React.FC = () => {
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <span className="ml-2 font-heading font-bold text-sm xl:hidden">Menu Navigasi</span>
+            <span className="ml-2 font-heading font-bold text-sm lg:hidden">Menu Navigasi</span>
           </div>
 
           {/* Pencarian Cepat & Tombol Info Siaga */}
@@ -133,7 +133,7 @@ export const Navbar: React.FC = () => {
         <div
           id="mobile-menu"
           ref={drawerRef}
-          className="xl:hidden fixed inset-0 top-[110px] bg-primary/95 z-50 backdrop-blur-sm overflow-y-auto p-6 flex flex-col gap-4 animate-fadeIn"
+          className="lg:hidden fixed inset-0 top-[110px] bg-primary/95 z-50 backdrop-blur-sm overflow-y-auto p-6 flex flex-col gap-4 animate-fadeIn"
         >
           <div className="flex flex-col gap-2 font-heading text-base">
             {navItems.map((item) => (
