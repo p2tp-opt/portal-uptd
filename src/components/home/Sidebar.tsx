@@ -150,11 +150,11 @@ export const Sidebar: React.FC = () => {
 
         <div className="flex flex-col gap-2 pt-1">
           <a
-            href="tel:0541743488"
+            href="tel:0541273580"
             className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary text-on-primary hover:bg-secondary font-heading text-xs font-bold rounded-xl transition-colors"
           >
             <Phone className="w-4 h-4" />
-            <span>Telepon: (0541) 743488</span>
+            <span>Telepon: (0541) 273580</span>
           </a>
           <Link
             to="/kontak"

@@ -97,11 +97,11 @@ export const ContactPage: React.FC = () => {
 
             <div className="pt-4 border-t border-border-subtle flex flex-col sm:flex-row gap-3">
               <a
-                href="tel:0541743488"
+                href="tel:0541273580"
                 className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-primary text-on-primary hover:bg-secondary rounded-xl font-heading text-xs font-bold transition-colors shadow-sm"
               >
                 <Phone className="w-4 h-4" />
-                <span>Hubungi via Telepon</span>
+                <span>Hubungi via Telepon: (0541) 273580</span>
               </a>
               <a
                 href="https://wa.me/"

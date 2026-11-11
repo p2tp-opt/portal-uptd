@@ -1,22 +1,58 @@
-import React from 'react';
-import { CalendarDays, Megaphone, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CalendarDays, Megaphone, Phone, Clock } from 'lucide-react';
 import { getCurrentDateHeaderWITA } from '../../utils/date';
 import { Link } from 'react-router-dom';
+import { contentRepository } from '../../services/contentRepository';
+import { ProfileContact } from '../../types/content';
 
 export const Header: React.FC = () => {
   const currentDate = getCurrentDateHeaderWITA();
+  const [profile, setProfile] = useState<ProfileContact | null>(null);
+  const [realtimeClock, setRealtimeClock] = useState<string>('');
+
+  useEffect(() => {
+    contentRepository.getProfile().then(setProfile);
+  }, []);
+
+  // Realtime Clock berdetak setiap detik dengan zona waktu WITA (Asia/Makassar)
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const timeStr = new Intl.DateTimeFormat('id-ID', {
+        timeZone: 'Asia/Makassar',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(now);
+      setRealtimeClock(timeStr);
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <header className="w-full shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40">
       {/* TOP BAR */}
       <div className="bg-primary text-on-primary py-1.5 px-4 sm:px-6 lg:px-8 text-xs">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          {/* Tanggal & Informasi Singkat */}
+          {/* Tanggal & Realtime Jam WITA */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <CalendarDays className="w-3.5 h-3.5 text-tertiary-fixed-dim" aria-hidden="true" />
-              <span className="font-medium">{currentDate} (WITA)</span>
+              <span className="font-medium">{currentDate}</span>
             </div>
+
+            {/* Jam Digital Realtime WITA */}
+            {realtimeClock && (
+              <div className="flex items-center gap-1 bg-primary-container px-2 py-0.5 rounded text-[11px] font-mono text-tertiary-fixed font-bold border border-secondary shadow-xs">
+                <Clock className="w-3 h-3 text-kaltim-gold animate-pulse" />
+                <span>{realtimeClock} WITA</span>
+              </div>
+            )}
+
             <span className="hidden sm:inline text-on-primary-container">|</span>
             <div className="hidden md:flex items-center gap-1.5 text-surface-container-low">
               <Megaphone className="w-3.5 h-3.5 text-tertiary-fixed-dim" aria-hidden="true" />
@@ -24,11 +60,16 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Hotline */}
+          {/* Hotline / Telepon Resmi */}
           <div className="flex items-center gap-4 ml-auto">
             <div className="flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5 text-tertiary-fixed-dim" aria-hidden="true" />
-              <span className="font-medium">(0541) 743488 / Hotline P2TP</span>
+              <a
+                href="tel:0541273580"
+                className="font-medium hover:text-tertiary-fixed-dim transition-colors"
+              >
+                {profile?.phone || '(0541) 273580 / (0541) 743488'}
+              </a>
             </div>
           </div>
         </div>
@@ -38,10 +79,23 @@ export const Header: React.FC = () => {
       <div className="bg-surface-container-lowest py-3.5 px-4 sm:px-6 lg:px-8 border-b border-border-subtle">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           {/* Logo & Identitas Lembaga */}
-          <Link to="/" className="flex items-center gap-3.5 group focus:outline-none focus:ring-2 focus:ring-kaltim-gold rounded-lg p-1">
-            <div className="w-12 h-12 rounded-xl bg-primary-container text-kaltim-gold flex items-center justify-center font-heading font-extrabold text-base shadow-sm border border-secondary flex-shrink-0">
-              P2TP
-            </div>
+          <Link
+            to="/"
+            className="flex items-center gap-3.5 group focus:outline-none focus:ring-2 focus:ring-kaltim-gold rounded-lg p-1"
+          >
+            {/* Logo Instansi Dinamis */}
+            {profile?.logoUrl ? (
+              <img
+                src={profile.logoUrl}
+                alt="Logo UPTD P2TP"
+                className="h-12 w-auto max-w-[120px] object-contain flex-shrink-0"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-xl bg-primary-container text-kaltim-gold flex items-center justify-center font-heading font-extrabold text-base shadow-sm border border-secondary flex-shrink-0">
+                P2TP
+              </div>
+            )}
+
             <div className="flex flex-col">
               <span className="text-[11px] uppercase tracking-wider text-secondary font-bold">
                 Pemerintah Provinsi Kalimantan Timur
@@ -50,7 +104,7 @@ export const Header: React.FC = () => {
                 Dinas Perkebunan
               </span>
               <span className="text-xs sm:text-sm text-on-surface-variant font-medium">
-                UPTD Pengembangan Perlindungan Tanaman Perkebunan
+                {profile?.institutionName || 'UPTD Pengembangan Perlindungan Tanaman Perkebunan'}
               </span>
             </div>
           </Link>
@@ -62,7 +116,7 @@ export const Header: React.FC = () => {
                 Motto Pelayanan
               </div>
               <div className="text-sm font-heading text-tertiary-container italic font-bold">
-                “Profesional, Amanah dan Peduli”
+                “{profile?.motto || 'Profesional, Amanah dan Peduli'}”
               </div>
             </div>
           </div>

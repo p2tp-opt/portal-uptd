@@ -11,13 +11,13 @@ export const mockProfile: ProfileContact = {
   motto: 'Profesional, Amanah dan Peduli',
   description:
     'Unit Pelaksana Teknis Daerah Pengembangan Perlindungan Tanaman Perkebunan pada Dinas Perkebunan Provinsi Kalimantan Timur bertugas mengawal kesehatan, kelestarian, dan ketahanan tanaman komoditas strategis perkebunan di Benua Etam.',
-  // PLACEHOLDER — menunggu alamat resmi
-  address: 'Jl. Slamet Riyadi, Kel. Karang Asam Ilir, Kec. Sungai Kunjang, Samarinda, Kalimantan Timur (Placeholder)',
-  // PLACEHOLDER — menunggu nomor telepon resmi
-  phone: '(0541) 743488 (Placeholder)',
-  // PLACEHOLDER — menunggu email dinas resmi
-  email: 'uptd.p2tp@kaltimprov.go.id (Placeholder)',
-  officeHours: 'Senin - Kamis: 08.00 - 16.00 WITA | Jumat: 08.00 - 11.00 WITA (Placeholder)',
+  logoUrl: '', // Bisa diunggah atau diisi URL logo melalui menu CMS Pengaturan Profil
+  // Alamat resmi
+  address: 'Jl. Slamet Riyadi, Kel. Karang Asam Ilir, Kec. Sungai Kunjang, Samarinda, Kalimantan Timur',
+  // Nomor telepon resmi yang diminta
+  phone: '(0541) 273580 / (0541) 743488',
+  email: 'uptd.p2tp@kaltimprov.go.id',
+  officeHours: 'Senin - Kamis: 08.00 - 16.00 WITA | Jumat: 08.00 - 11.00 WITA',
   socialLinks: [
     { platform: 'youtube', url: 'https://www.youtube.com', label: 'YouTube Resmi P2TP' },
     { platform: 'instagram', url: 'https://www.instagram.com', label: 'Instagram Resmi P2TP' },

@@ -82,6 +82,7 @@ export interface ProfileContact {
   institutionName: string;
   motto: string;
   description: string;
+  logoUrl?: string;         // URL atau data URL logo instansi (bisa diatur via CMS)
   address?: string;
   phone?: string;
   email?: string;
