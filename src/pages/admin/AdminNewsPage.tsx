@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X, Search, CalendarDays } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Plus, Edit2, Trash2, X, Search, CalendarDays, Upload } from 'lucide-react';
 import { News } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
 import { formatDateWITA } from '../../utils/date';
+import { processImageFile } from '../../utils/fileUpload';
 
 export const AdminNewsPage: React.FC = () => {
   const [newsList, setNewsList] = useState<News[]>([]);
@@ -12,6 +13,7 @@ export const AdminNewsPage: React.FC = () => {
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: '',
     category: 'Gerakan Pengendalian',
@@ -268,13 +270,53 @@ export const AdminNewsPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="font-heading font-bold text-on-surface">URL Gambar Cover (Unsplash / Hosted)</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-heading font-bold text-on-surface">Gambar Sampul Berita</label>
+                  <div>
+                    <input
+                      ref={coverImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const compressed = await processImageFile(file, 1200, 0.85);
+                            setFormData({ ...formData, coverImage: compressed });
+                          } catch (err) {
+                            alert('Gagal memproses gambar: ' + String(err));
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => coverImageInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary text-on-secondary rounded-lg font-heading font-bold text-xs hover:bg-primary transition-colors shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-kaltim-gold" />
+                      <span>Unggah Foto dari Komputer</span>
+                    </button>
+                  </div>
+                </div>
+
+                {formData.coverImage && (
+                  <div className="w-full h-36 rounded-xl overflow-hidden bg-surface-container-high border border-border-subtle relative my-1">
+                    <img
+                      src={formData.coverImage}
+                      alt="Pratinjau Cover Berita"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
                 <input
-                  type="url"
+                  type="text"
                   value={formData.coverImage}
                   onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
+                  placeholder="https://... atau klik tombol Unggah Foto di atas"
+                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold text-xs"
                 />
               </div>
 

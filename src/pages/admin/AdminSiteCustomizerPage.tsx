@@ -19,6 +19,7 @@ import {
 import { SiteSettings, SlideItem } from '../../types/siteSettings';
 import { contentRepository } from '../../services/contentRepository';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
+import { processImageFile } from '../../utils/fileUpload';
 
 export const AdminSiteCustomizerPage: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
@@ -94,25 +95,21 @@ export const AdminSiteCustomizerPage: React.FC = () => {
     });
   };
 
-  const handleLeaderPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLeaderPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Ukuran berkas foto maksimal 2 MB.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const result = uploadEvent.target?.result as string;
+      try {
+        const compressed = await processImageFile(file, 800, 0.85);
         setSettings({
           ...settings,
           welcome: {
             ...settings.welcome,
-            leaderPhoto: result,
+            leaderPhoto: compressed,
           },
         });
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        alert('Gagal memproses foto pejabat: ' + String(err));
+      }
     }
   };
 
@@ -482,14 +479,45 @@ export const AdminSiteCustomizerPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-text-muted">URL Gambar Banner:</label>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <label className="text-[10px] font-bold text-text-muted">
+                            Gambar Banner Slide:
+                          </label>
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="file"
+                              id={`slide-file-${slide.id}`}
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    const compressed = await processImageFile(file, 1600, 0.85);
+                                    handleUpdateSlide(slide.id, 'imageUrl', compressed);
+                                  } catch (err) {
+                                    alert('Gagal memproses gambar: ' + String(err));
+                                  }
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById(`slide-file-${slide.id}`)?.click()}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-secondary text-on-secondary rounded-lg font-heading font-bold text-[11px] hover:bg-primary transition-colors shadow-xs"
+                            >
+                              <Upload className="w-3 h-3 text-kaltim-gold" />
+                              <span>Pilih / Unggah Foto</span>
+                            </button>
+                          </div>
+                        </div>
                         <input
                           type="text"
                           value={slide.imageUrl}
                           onChange={(e) => handleUpdateSlide(slide.id, 'imageUrl', e.target.value)}
                           className="px-2.5 py-1.5 bg-surface-container-lowest rounded-lg border border-border-subtle text-xs"
-                          placeholder="https://..."
+                          placeholder="https://... atau klik tombol Pilih / Unggah Foto di atas"
                         />
                       </div>
                     </div>

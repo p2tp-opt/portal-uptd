@@ -268,16 +268,25 @@ export const GalleryPage: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="relative aspect-video w-full">
-                <iframe
-                  src={selectedVideo.videoUrl}
-                  title={selectedVideo.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full border-0"
-                  sandbox="allow-scripts allow-same-origin allow-presentation"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
+              <div className="relative aspect-video w-full bg-black">
+                {selectedVideo.videoUrl.startsWith('data:') || selectedVideo.videoUrl.includes('.mp4') || selectedVideo.videoUrl.includes('.webm') ? (
+                  <video
+                    src={selectedVideo.videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <iframe
+                    src={selectedVideo.videoUrl}
+                    title={selectedVideo.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                )}
               </div>
 
               <div className="p-4 bg-surface-container-lowest text-on-surface">

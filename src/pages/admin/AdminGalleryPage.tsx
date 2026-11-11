@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, X, Camera, PlayCircle, CalendarDays } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Plus, Trash2, X, Camera, PlayCircle, CalendarDays, Upload } from 'lucide-react';
 import { Photo, Video } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
 import { formatDateWITA } from '../../utils/date';
+import { processImageFile, processMediaFile } from '../../utils/fileUpload';
 
 export const AdminGalleryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'foto' | 'video'>('foto');
@@ -12,6 +13,7 @@ export const AdminGalleryPage: React.FC = () => {
 
   // Modal Foto
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const photoFileInputRef = useRef<HTMLInputElement>(null);
   const [photoForm, setPhotoForm] = useState({
     title: '',
     description: '',
@@ -23,6 +25,8 @@ export const AdminGalleryPage: React.FC = () => {
 
   // Modal Video
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const videoThumbInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
   const [videoForm, setVideoForm] = useState({
     title: '',
     description: '',
@@ -285,15 +289,59 @@ export const AdminGalleryPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="font-heading font-bold text-on-surface">URL Gambar Foto</label>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-heading font-bold text-on-surface">Gambar Foto Dokumentasi</label>
+                  <div>
+                    <input
+                      ref={photoFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const compressed = await processImageFile(file, 1600, 0.85);
+                            setPhotoForm({
+                              ...photoForm,
+                              imageUrl: compressed,
+                              altText: photoForm.altText || file.name.replace(/\.[^/.]+$/, ''),
+                            });
+                          } catch (err) {
+                            alert('Gagal memproses foto: ' + String(err));
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => photoFileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary text-on-secondary rounded-lg font-heading font-bold text-xs hover:bg-primary transition-colors shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-kaltim-gold" />
+                      <span>Unggah Foto dari Komputer</span>
+                    </button>
+                  </div>
+                </div>
+
+                {photoForm.imageUrl && (
+                  <div className="w-full h-32 rounded-xl overflow-hidden bg-surface-container-high border border-border-subtle relative my-1">
+                    <img
+                      src={photoForm.imageUrl}
+                      alt="Pratinjau Foto"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
                 <input
-                  type="url"
+                  type="text"
                   required
                   value={photoForm.imageUrl}
                   onChange={(e) => setPhotoForm({ ...photoForm, imageUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
+                  placeholder="https://... atau klik tombol Unggah Foto di atas"
+                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold text-xs"
                 />
               </div>
 
@@ -385,27 +433,101 @@ export const AdminGalleryPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="font-heading font-bold text-on-surface">URL Sematan Video (youtube-nocookie.com)</label>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-heading font-bold text-on-surface">Sumber Video (File / YouTube)</label>
+                  <div>
+                    <input
+                      ref={videoFileInputRef}
+                      type="file"
+                      accept="video/mp4,video/webm,video/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const res = await processMediaFile(file);
+                            setVideoForm({
+                              ...videoForm,
+                              videoUrl: res.dataUrl,
+                              title: videoForm.title || res.name.replace(/\.[^/.]+$/, ''),
+                            });
+                          } catch (err) {
+                            alert('Gagal membaca video: ' + String(err));
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => videoFileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary text-on-secondary rounded-lg font-heading font-bold text-xs hover:bg-primary transition-colors shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-kaltim-gold" />
+                      <span>Unggah File Video (MP4)</span>
+                    </button>
+                  </div>
+                </div>
+
                 <input
-                  type="url"
+                  type="text"
                   required
                   value={videoForm.videoUrl}
                   onChange={(e) => setVideoForm({ ...videoForm, videoUrl: e.target.value })}
-                  placeholder="https://www.youtube-nocookie.com/embed/..."
-                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
+                  placeholder="https://www.youtube-nocookie.com/embed/... atau klik Unggah Video"
+                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold text-xs"
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="font-heading font-bold text-on-surface">URL Thumbnail Gambar</label>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-heading font-bold text-on-surface">Thumbnail Gambar Video</label>
+                  <div>
+                    <input
+                      ref={videoThumbInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const compressed = await processImageFile(file, 1200, 0.85);
+                            setVideoForm({ ...videoForm, thumbnailUrl: compressed });
+                          } catch (err) {
+                            alert('Gagal memproses thumbnail: ' + String(err));
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => videoThumbInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary text-on-secondary rounded-lg font-heading font-bold text-xs hover:bg-primary transition-colors shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-kaltim-gold" />
+                      <span>Unggah Thumbnail</span>
+                    </button>
+                  </div>
+                </div>
+
+                {videoForm.thumbnailUrl && (
+                  <div className="w-full h-28 rounded-xl overflow-hidden bg-surface-container-high border border-border-subtle relative my-1">
+                    <img
+                      src={videoForm.thumbnailUrl}
+                      alt="Pratinjau Thumbnail Video"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
                 <input
-                  type="url"
+                  type="text"
                   required
                   value={videoForm.thumbnailUrl}
                   onChange={(e) => setVideoForm({ ...videoForm, thumbnailUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
+                  placeholder="https://... atau klik tombol Unggah Thumbnail di atas"
+                  className="w-full px-3 py-2 bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold text-xs"
                 />
               </div>
 

@@ -202,13 +202,22 @@ export const VideoSection: React.FC = () => {
               </div>
 
               <div className="relative w-full aspect-video bg-black">
-                <iframe
-                  src={activeVideo.videoUrl}
-                  title={activeVideo.title}
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+                {activeVideo.videoUrl.startsWith('data:') || activeVideo.videoUrl.includes('.mp4') || activeVideo.videoUrl.includes('.webm') ? (
+                  <video
+                    src={activeVideo.videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <iframe
+                    src={activeVideo.videoUrl}
+                    title={activeVideo.title}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                )}
               </div>
 
               <div className="p-4 flex items-center justify-between text-xs text-text-muted">
