@@ -1,6 +1,6 @@
 // src/services/contentRepository.ts
-// Lapisan Abstraksi Data dengan Dukungan CRUD untuk Admin Panel & CMS
-// Menggunakan localStorage untuk persistensi sesi operator lokal yang mulus
+// Lapisan Abstraksi Data (Repository Pattern)
+// Mendukung Supabase Cloud Database (Tahap 2) dengan fallback otomatis ke LocalStorage
 
 import {
   News,
@@ -19,9 +19,9 @@ import {
   mockVideos,
   mockProfile,
 } from '../data/mockData';
+import { supabase } from './supabaseClient';
 
 export interface ContentRepository {
-  // Pembacaan Publik
   listNews(opts?: ListOptions): Promise<News[]>;
   getNewsBySlug(slug: string): Promise<News | null>;
   listAgenda(opts?: ListOptions & { upcomingOnly?: boolean }): Promise<Agenda[]>;
@@ -32,7 +32,7 @@ export interface ContentRepository {
   listVideos(opts?: ListOptions): Promise<Video[]>;
   getProfile(): Promise<ProfileContact>;
 
-  // Pengelolaan Operator / Admin CMS (CRUD)
+  // CRUD
   createNews(item: Omit<News, 'id' | 'slug'>): Promise<News>;
   updateNews(id: string, item: Partial<News>): Promise<News | null>;
   deleteNews(id: string): Promise<boolean>;
@@ -73,15 +73,16 @@ function generateSlug(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// --------------------------------------------------------------------------
+// 1. IMPLEMENTASI LOCAL STORAGE (Fallback & Standalone)
+// --------------------------------------------------------------------------
 export class LocalStorageContentRepository implements ContentRepository {
   private getStorage<T>(key: string, defaultData: T): T {
     try {
       const stored = localStorage.getItem(key);
-      if (stored) {
-        return JSON.parse(stored);
-      }
+      if (stored) return JSON.parse(stored);
     } catch {
-      // Fallback bila SSR atau localStorage error
+      // ignore
     }
     return defaultData;
   }
@@ -90,19 +91,15 @@ export class LocalStorageContentRepository implements ContentRepository {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch {
-      // Ignore storage limit errors
+      // ignore
     }
   }
 
   async listNews(opts?: ListOptions): Promise<News[]> {
     let result = this.getStorage<News[]>(STORAGE_KEYS.NEWS, mockNews);
-
     if (opts?.category) {
-      result = result.filter(
-        (n) => n.category.toLowerCase() === opts.category?.toLowerCase()
-      );
+      result = result.filter((n) => n.category.toLowerCase() === opts.category?.toLowerCase());
     }
-
     if (opts?.query) {
       const q = opts.query.toLowerCase();
       result = result.filter(
@@ -112,18 +109,9 @@ export class LocalStorageContentRepository implements ContentRepository {
           n.content.toLowerCase().includes(q)
       );
     }
-
-    result.sort(
-      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
-
-    if (opts?.offset !== undefined) {
-      result = result.slice(opts.offset);
-    }
-    if (opts?.limit !== undefined) {
-      result = result.slice(0, opts.limit);
-    }
-
+    result.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    if (opts?.offset !== undefined) result = result.slice(opts.offset);
+    if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
 
@@ -136,12 +124,7 @@ export class LocalStorageContentRepository implements ContentRepository {
     const list = this.getStorage<News[]>(STORAGE_KEYS.NEWS, mockNews);
     const id = `news-${Date.now()}`;
     const slug = `${generateSlug(item.title)}-${Date.now().toString().slice(-4)}`;
-    const newItem: News = {
-      ...item,
-      id,
-      slug,
-      status: item.status || 'published',
-    };
+    const newItem: News = { ...item, id, slug, status: item.status || 'published' };
     list.unshift(newItem);
     this.setStorage(STORAGE_KEYS.NEWS, list);
     return newItem;
@@ -151,7 +134,6 @@ export class LocalStorageContentRepository implements ContentRepository {
     const list = this.getStorage<News[]>(STORAGE_KEYS.NEWS, mockNews);
     const idx = list.findIndex((n) => n.id === id);
     if (idx === -1) return null;
-
     const updated = { ...list[idx], ...item };
     if (item.title && item.title !== list[idx].title) {
       updated.slug = `${generateSlug(item.title)}-${id.slice(-4)}`;
@@ -169,15 +151,9 @@ export class LocalStorageContentRepository implements ContentRepository {
     return list.length < initialLen;
   }
 
-  async listAgenda(
-    opts?: ListOptions & { upcomingOnly?: boolean }
-  ): Promise<Agenda[]> {
+  async listAgenda(opts?: ListOptions & { upcomingOnly?: boolean }): Promise<Agenda[]> {
     let result = this.getStorage<Agenda[]>(STORAGE_KEYS.AGENDA, mockAgenda);
-
-    if (opts?.upcomingOnly) {
-      result = result.filter((a) => a.status === 'akan-datang');
-    }
-
+    if (opts?.upcomingOnly) result = result.filter((a) => a.status === 'akan-datang');
     if (opts?.query) {
       const q = opts.query.toLowerCase();
       result = result.filter(
@@ -187,18 +163,9 @@ export class LocalStorageContentRepository implements ContentRepository {
           (a.location && a.location.toLowerCase().includes(q))
       );
     }
-
-    result.sort(
-      (a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime()
-    );
-
-    if (opts?.offset !== undefined) {
-      result = result.slice(opts.offset);
-    }
-    if (opts?.limit !== undefined) {
-      result = result.slice(0, opts.limit);
-    }
-
+    result.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
+    if (opts?.offset !== undefined) result = result.slice(opts.offset);
+    if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
 
@@ -235,33 +202,18 @@ export class LocalStorageContentRepository implements ContentRepository {
 
   async listPublications(opts?: ListOptions): Promise<Publication[]> {
     let result = this.getStorage<Publication[]>(STORAGE_KEYS.PUBLICATIONS, mockPublications);
-
     if (opts?.category) {
-      result = result.filter(
-        (p) => p.category.toLowerCase() === opts.category?.toLowerCase()
-      );
+      result = result.filter((p) => p.category.toLowerCase() === opts.category?.toLowerCase());
     }
-
     if (opts?.query) {
       const q = opts.query.toLowerCase();
       result = result.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q)
+        (p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
       );
     }
-
-    result.sort(
-      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
-
-    if (opts?.offset !== undefined) {
-      result = result.slice(opts.offset);
-    }
-    if (opts?.limit !== undefined) {
-      result = result.slice(0, opts.limit);
-    }
-
+    result.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    if (opts?.offset !== undefined) result = result.slice(opts.offset);
+    if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
 
@@ -299,20 +251,11 @@ export class LocalStorageContentRepository implements ContentRepository {
 
   async listPhotos(opts?: ListOptions): Promise<Photo[]> {
     let result = this.getStorage<Photo[]>(STORAGE_KEYS.PHOTOS, mockPhotos);
-
     if (opts?.category) {
-      result = result.filter(
-        (p) => p.category.toLowerCase() === opts.category?.toLowerCase()
-      );
+      result = result.filter((p) => p.category.toLowerCase() === opts.category?.toLowerCase());
     }
-
-    if (opts?.offset !== undefined) {
-      result = result.slice(opts.offset);
-    }
-    if (opts?.limit !== undefined) {
-      result = result.slice(0, opts.limit);
-    }
-
+    if (opts?.offset !== undefined) result = result.slice(opts.offset);
+    if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
 
@@ -335,24 +278,12 @@ export class LocalStorageContentRepository implements ContentRepository {
 
   async listVideos(opts?: ListOptions): Promise<Video[]> {
     let result = this.getStorage<Video[]>(STORAGE_KEYS.VIDEOS, mockVideos);
-
     if (opts?.category) {
-      result = result.filter(
-        (v) => v.category.toLowerCase() === opts.category?.toLowerCase()
-      );
+      result = result.filter((v) => v.category.toLowerCase() === opts.category?.toLowerCase());
     }
-
-    result.sort(
-      (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
-
-    if (opts?.offset !== undefined) {
-      result = result.slice(opts.offset);
-    }
-    if (opts?.limit !== undefined) {
-      result = result.slice(0, opts.limit);
-    }
-
+    result.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    if (opts?.offset !== undefined) result = result.slice(opts.offset);
+    if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
 
@@ -394,5 +325,570 @@ export class LocalStorageContentRepository implements ContentRepository {
   }
 }
 
-// Instance default yang dapat diakses seluruh aplikasi
-export const contentRepository: ContentRepository = new LocalStorageContentRepository();
+// --------------------------------------------------------------------------
+// 2. IMPLEMENTASI SUPABASE (Cloud Database)
+// --------------------------------------------------------------------------
+export class SupabaseContentRepository implements ContentRepository {
+  private fallback = new LocalStorageContentRepository();
+
+  async listNews(opts?: ListOptions): Promise<News[]> {
+    if (!supabase) return this.fallback.listNews(opts);
+    try {
+      let query = supabase.from('news').select('*').order('published_at', { ascending: false });
+      if (opts?.category) query = query.eq('category', opts.category);
+      if (opts?.limit) query = query.limit(opts.limit);
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) return this.fallback.listNews(opts);
+
+      return data.map((d) => ({
+        id: d.id,
+        title: d.title,
+        slug: d.slug,
+        excerpt: d.excerpt,
+        content: d.content,
+        category: d.category,
+        coverImage: d.cover_image,
+        publishedAt: d.published_at,
+        author: d.author,
+        status: d.status,
+      }));
+    } catch {
+      return this.fallback.listNews(opts);
+    }
+  }
+
+  async getNewsBySlug(slug: string): Promise<News | null> {
+    if (!supabase) return this.fallback.getNewsBySlug(slug);
+    try {
+      const { data, error } = await supabase.from('news').select('*').eq('slug', slug).single();
+      if (error || !data) return this.fallback.getNewsBySlug(slug);
+
+      return {
+        id: data.id,
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        category: data.category,
+        coverImage: data.cover_image,
+        publishedAt: data.published_at,
+        author: data.author,
+        status: data.status,
+      };
+    } catch {
+      return this.fallback.getNewsBySlug(slug);
+    }
+  }
+
+  async createNews(item: Omit<News, 'id' | 'slug'>): Promise<News> {
+    if (!supabase) return this.fallback.createNews(item);
+    try {
+      const slug = `${generateSlug(item.title)}-${Date.now().toString().slice(-4)}`;
+      const { data, error } = await supabase
+        .from('news')
+        .insert([
+          {
+            title: item.title,
+            slug,
+            excerpt: item.excerpt,
+            content: item.content,
+            category: item.category,
+            cover_image: item.coverImage,
+            author: item.author,
+            published_at: item.publishedAt,
+            status: item.status || 'published',
+          },
+        ])
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.createNews(item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        category: data.category,
+        coverImage: data.cover_image,
+        publishedAt: data.published_at,
+        author: data.author,
+        status: data.status,
+      };
+    } catch {
+      return this.fallback.createNews(item);
+    }
+  }
+
+  async updateNews(id: string, item: Partial<News>): Promise<News | null> {
+    if (!supabase) return this.fallback.updateNews(id, item);
+    try {
+      const updatePayload: Record<string, unknown> = {};
+      if (item.title !== undefined) updatePayload.title = item.title;
+      if (item.excerpt !== undefined) updatePayload.excerpt = item.excerpt;
+      if (item.content !== undefined) updatePayload.content = item.content;
+      if (item.category !== undefined) updatePayload.category = item.category;
+      if (item.coverImage !== undefined) updatePayload.cover_image = item.coverImage;
+      if (item.author !== undefined) updatePayload.author = item.author;
+
+      const { data, error } = await supabase
+        .from('news')
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.updateNews(id, item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        category: data.category,
+        coverImage: data.cover_image,
+        publishedAt: data.published_at,
+        author: data.author,
+        status: data.status,
+      };
+    } catch {
+      return this.fallback.updateNews(id, item);
+    }
+  }
+
+  async deleteNews(id: string): Promise<boolean> {
+    if (!supabase) return this.fallback.deleteNews(id);
+    try {
+      const { error } = await supabase.from('news').delete().eq('id', id);
+      return !error;
+    } catch {
+      return this.fallback.deleteNews(id);
+    }
+  }
+
+  async listAgenda(opts?: ListOptions & { upcomingOnly?: boolean }): Promise<Agenda[]> {
+    if (!supabase) return this.fallback.listAgenda(opts);
+    try {
+      let query = supabase.from('agenda').select('*').order('event_date', { ascending: true });
+      if (opts?.upcomingOnly) query = query.eq('status', 'akan-datang');
+      if (opts?.limit) query = query.limit(opts.limit);
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) return this.fallback.listAgenda(opts);
+
+      return data.map((d) => ({
+        id: d.id,
+        title: d.title,
+        description: d.description,
+        eventDate: d.event_date,
+        startTime: d.start_time,
+        endTime: d.end_time,
+        location: d.location,
+        status: d.status,
+      }));
+    } catch {
+      return this.fallback.listAgenda(opts);
+    }
+  }
+
+  async getAgendaById(id: string): Promise<Agenda | null> {
+    return this.fallback.getAgendaById(id);
+  }
+
+  async createAgenda(item: Omit<Agenda, 'id'>): Promise<Agenda> {
+    if (!supabase) return this.fallback.createAgenda(item);
+    try {
+      const { data, error } = await supabase
+        .from('agenda')
+        .insert([
+          {
+            title: item.title,
+            description: item.description,
+            event_date: item.eventDate,
+            start_time: item.startTime,
+            end_time: item.endTime,
+            location: item.location,
+            status: item.status,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.createAgenda(item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        eventDate: data.event_date,
+        startTime: data.start_time,
+        endTime: data.end_time,
+        location: data.location,
+        status: data.status,
+      };
+    } catch {
+      return this.fallback.createAgenda(item);
+    }
+  }
+
+  async updateAgenda(id: string, item: Partial<Agenda>): Promise<Agenda | null> {
+    if (!supabase) return this.fallback.updateAgenda(id, item);
+    try {
+      const { data, error } = await supabase
+        .from('agenda')
+        .update({
+          title: item.title,
+          description: item.description,
+          event_date: item.eventDate,
+          start_time: item.startTime,
+          end_time: item.endTime,
+          location: item.location,
+          status: item.status,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.updateAgenda(id, item);
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        eventDate: data.event_date,
+        startTime: data.start_time,
+        endTime: data.end_time,
+        location: data.location,
+        status: data.status,
+      };
+    } catch {
+      return this.fallback.updateAgenda(id, item);
+    }
+  }
+
+  async deleteAgenda(id: string): Promise<boolean> {
+    if (!supabase) return this.fallback.deleteAgenda(id);
+    try {
+      const { error } = await supabase.from('agenda').delete().eq('id', id);
+      return !error;
+    } catch {
+      return this.fallback.deleteAgenda(id);
+    }
+  }
+
+  async listPublications(opts?: ListOptions): Promise<Publication[]> {
+    if (!supabase) return this.fallback.listPublications(opts);
+    try {
+      let query = supabase.from('publications').select('*').order('published_at', { ascending: false });
+      if (opts?.category) query = query.eq('category', opts.category);
+      if (opts?.limit) query = query.limit(opts.limit);
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) return this.fallback.listPublications(opts);
+
+      return data.map((d) => ({
+        id: d.id,
+        title: d.title,
+        slug: d.slug,
+        description: d.description,
+        documentUrl: d.document_url,
+        fileSize: d.file_size,
+        fileType: d.file_type,
+        category: d.category,
+        publishedAt: d.published_at,
+        status: d.status,
+      }));
+    } catch {
+      return this.fallback.listPublications(opts);
+    }
+  }
+
+  async getPublicationBySlug(slug: string): Promise<Publication | null> {
+    return this.fallback.getPublicationBySlug(slug);
+  }
+
+  async createPublication(item: Omit<Publication, 'id' | 'slug'>): Promise<Publication> {
+    if (!supabase) return this.fallback.createPublication(item);
+    try {
+      const slug = `${generateSlug(item.title)}-${Date.now().toString().slice(-4)}`;
+      const { data, error } = await supabase
+        .from('publications')
+        .insert([
+          {
+            title: item.title,
+            slug,
+            description: item.description,
+            document_url: item.documentUrl,
+            file_size: item.fileSize,
+            file_type: item.fileType,
+            category: item.category,
+            published_at: item.publishedAt,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.createPublication(item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        slug: data.slug,
+        description: data.description,
+        documentUrl: data.document_url,
+        fileSize: data.file_size,
+        fileType: data.file_type,
+        category: data.category,
+        publishedAt: data.published_at,
+      };
+    } catch {
+      return this.fallback.createPublication(item);
+    }
+  }
+
+  async updatePublication(id: string, item: Partial<Publication>): Promise<Publication | null> {
+    if (!supabase) return this.fallback.updatePublication(id, item);
+    try {
+      const { data, error } = await supabase
+        .from('publications')
+        .update({
+          title: item.title,
+          description: item.description,
+          document_url: item.documentUrl,
+          file_size: item.fileSize,
+          category: item.category,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.updatePublication(id, item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        slug: data.slug,
+        description: data.description,
+        documentUrl: data.document_url,
+        fileSize: data.file_size,
+        fileType: data.file_type,
+        category: data.category,
+        publishedAt: data.published_at,
+      };
+    } catch {
+      return this.fallback.updatePublication(id, item);
+    }
+  }
+
+  async deletePublication(id: string): Promise<boolean> {
+    if (!supabase) return this.fallback.deletePublication(id);
+    try {
+      const { error } = await supabase.from('publications').delete().eq('id', id);
+      return !error;
+    } catch {
+      return this.fallback.deletePublication(id);
+    }
+  }
+
+  async listPhotos(opts?: ListOptions): Promise<Photo[]> {
+    if (!supabase) return this.fallback.listPhotos(opts);
+    try {
+      const { data, error } = await supabase.from('photos').select('*');
+      if (error || !data || data.length === 0) return this.fallback.listPhotos(opts);
+
+      return data.map((d) => ({
+        id: d.id,
+        title: d.title,
+        description: d.description,
+        imageUrl: d.image_url,
+        takenAt: d.taken_at,
+        category: d.category,
+        altText: d.alt_text,
+      }));
+    } catch {
+      return this.fallback.listPhotos(opts);
+    }
+  }
+
+  async createPhoto(item: Omit<Photo, 'id'>): Promise<Photo> {
+    if (!supabase) return this.fallback.createPhoto(item);
+    try {
+      const { data, error } = await supabase
+        .from('photos')
+        .insert([
+          {
+            title: item.title,
+            description: item.description,
+            image_url: item.imageUrl,
+            taken_at: item.takenAt,
+            category: item.category,
+            alt_text: item.altText,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.createPhoto(item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        imageUrl: data.image_url,
+        takenAt: data.taken_at,
+        category: data.category,
+        altText: data.alt_text,
+      };
+    } catch {
+      return this.fallback.createPhoto(item);
+    }
+  }
+
+  async deletePhoto(id: string): Promise<boolean> {
+    if (!supabase) return this.fallback.deletePhoto(id);
+    try {
+      const { error } = await supabase.from('photos').delete().eq('id', id);
+      return !error;
+    } catch {
+      return this.fallback.deletePhoto(id);
+    }
+  }
+
+  async listVideos(opts?: ListOptions): Promise<Video[]> {
+    if (!supabase) return this.fallback.listVideos(opts);
+    try {
+      const { data, error } = await supabase.from('videos').select('*');
+      if (error || !data || data.length === 0) return this.fallback.listVideos(opts);
+
+      return data.map((d) => ({
+        id: d.id,
+        title: d.title,
+        description: d.description,
+        thumbnailUrl: d.thumbnail_url,
+        videoUrl: d.video_url,
+        duration: d.duration,
+        category: d.category,
+        publishedAt: d.published_at,
+      }));
+    } catch {
+      return this.fallback.listVideos(opts);
+    }
+  }
+
+  async createVideo(item: Omit<Video, 'id'>): Promise<Video> {
+    if (!supabase) return this.fallback.createVideo(item);
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .insert([
+          {
+            title: item.title,
+            description: item.description,
+            thumbnail_url: item.thumbnailUrl,
+            video_url: item.videoUrl,
+            duration: item.duration,
+            category: item.category,
+            published_at: item.publishedAt,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.createVideo(item);
+
+      return {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        thumbnailUrl: data.thumbnail_url,
+        videoUrl: data.video_url,
+        duration: data.duration,
+        category: data.category,
+        publishedAt: data.published_at,
+      };
+    } catch {
+      return this.fallback.createVideo(item);
+    }
+  }
+
+  async deleteVideo(id: string): Promise<boolean> {
+    if (!supabase) return this.fallback.deleteVideo(id);
+    try {
+      const { error } = await supabase.from('videos').delete().eq('id', id);
+      return !error;
+    } catch {
+      return this.fallback.deleteVideo(id);
+    }
+  }
+
+  async getProfile(): Promise<ProfileContact> {
+    if (!supabase) return this.fallback.getProfile();
+    try {
+      const { data, error } = await supabase.from('site_profile').select('*').eq('id', 1).single();
+      if (error || !data) return this.fallback.getProfile();
+
+      return {
+        institutionName: data.institution_name,
+        motto: data.motto,
+        description: data.description,
+        logoUrl: data.logo_url,
+        address: data.address,
+        phone: data.phone,
+        email: data.email,
+        officeHours: data.office_hours,
+        socialLinks: data.social_links || [],
+        verified: data.verified,
+      };
+    } catch {
+      return this.fallback.getProfile();
+    }
+  }
+
+  async updateProfile(profile: Partial<ProfileContact>): Promise<ProfileContact> {
+    if (!supabase) return this.fallback.updateProfile(profile);
+    try {
+      const { data, error } = await supabase
+        .from('site_profile')
+        .upsert({
+          id: 1,
+          institution_name: profile.institutionName,
+          motto: profile.motto,
+          description: profile.description,
+          logo_url: profile.logoUrl,
+          address: profile.address,
+          phone: profile.phone,
+          email: profile.email,
+          office_hours: profile.officeHours,
+          verified: profile.verified,
+        })
+        .select()
+        .single();
+
+      if (error || !data) return this.fallback.updateProfile(profile);
+
+      return {
+        institutionName: data.institution_name,
+        motto: data.motto,
+        description: data.description,
+        logoUrl: data.logo_url,
+        address: data.address,
+        phone: data.phone,
+        email: data.email,
+        officeHours: data.office_hours,
+        socialLinks: data.social_links || [],
+        verified: data.verified,
+      };
+    } catch {
+      return this.fallback.updateProfile(profile);
+    }
+  }
+
+  async resetToSampleData(): Promise<void> {
+    return this.fallback.resetToSampleData();
+  }
+}
+
+// Instance default: gunakan Supabase jika terhubung, fallback ke LocalStorage
+export const contentRepository: ContentRepository = new SupabaseContentRepository();
