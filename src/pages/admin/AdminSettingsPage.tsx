@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Save, CheckCircle, ShieldCheck, Upload, Trash2, Phone, MapPin, Mail, Clock, Image } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Save, CheckCircle, ShieldCheck, Upload, Trash2, Phone, MapPin, Mail, Clock, Image, Sliders } from 'lucide-react';
 import { ProfileContact } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
 
@@ -62,6 +63,26 @@ export const AdminSettingsPage: React.FC = () => {
         <p className="text-xs text-text-muted mt-0.5">
           Atur logo resmi UPTD / Pemprov Kaltim, nomor telepon hotline, alamat kantor, dan jam pelayanan.
         </p>
+      </div>
+
+      <div className="p-4 rounded-xl bg-gold-light border border-kaltim-gold/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Sliders className="w-5 h-5 text-secondary flex-shrink-0" />
+          <div className="flex flex-col">
+            <span className="font-heading font-bold text-xs text-primary">
+              Ingin mengubah teks halaman, hero slider banner, sambutan, atau sidebar?
+            </span>
+            <span className="text-[11px] text-text-muted">
+              Gunakan menu Pengaturan Tampilan & Konten Website untuk kendali menyeluruh di Supabase Cloud.
+            </span>
+          </div>
+        </div>
+        <Link
+          to="/admin/tampilan"
+          className="px-4 py-2 bg-secondary text-on-secondary rounded-xl font-heading font-bold text-xs hover:bg-primary transition-colors flex-shrink-0 self-start sm:self-auto"
+        >
+          Buka Customizer Web
+        </Link>
       </div>
 
       {savedSuccess && (

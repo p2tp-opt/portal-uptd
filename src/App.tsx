@@ -25,6 +25,7 @@ import { AdminAgendaPage } from './pages/admin/AdminAgendaPage';
 import { AdminPublicationPage } from './pages/admin/AdminPublicationPage';
 import { AdminGalleryPage } from './pages/admin/AdminGalleryPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+import { AdminSiteCustomizerPage } from './pages/admin/AdminSiteCustomizerPage';
 
 export const App: React.FC = () => {
   return (
@@ -56,6 +57,7 @@ export const App: React.FC = () => {
           }
         >
           <Route index element={<AdminDashboardPage />} />
+          <Route path="tampilan" element={<AdminSiteCustomizerPage />} />
           <Route path="berita" element={<AdminNewsPage />} />
           <Route path="agenda" element={<AdminAgendaPage />} />
           <Route path="publikasi" element={<AdminPublicationPage />} />

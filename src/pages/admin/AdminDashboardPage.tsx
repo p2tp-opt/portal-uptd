@@ -9,8 +9,9 @@ import {
   PlusCircle,
   Settings,
   ExternalLink,
-  CheckCircle2,
   AlertTriangle,
+  Sliders,
+  Cloud,
 } from 'lucide-react';
 import { contentRepository } from '../../services/contentRepository';
 import { formatDateWITA } from '../../utils/date';
@@ -63,17 +64,17 @@ export const AdminDashboardPage: React.FC = () => {
         </Link>
       </div>
 
-      {/* Status Basis Data & Integrasi */}
-      <div className="p-4 rounded-xl bg-gold-light border border-kaltim-gold/40 flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-kaltim-gold text-on-tertiary-fixed flex-shrink-0 mt-0.5">
-          <CheckCircle2 className="w-4 h-4" />
+      {/* Status Basis Data & Integrasi Supabase Cloud */}
+      <div className="p-4 rounded-xl bg-badge-activity-bg text-badge-activity-text border border-green-300 flex items-start gap-3">
+        <div className="p-2 rounded-lg bg-secondary text-on-secondary flex-shrink-0 mt-0.5">
+          <Cloud className="w-4 h-4 text-kaltim-gold" />
         </div>
         <div className="text-xs flex-1">
-          <strong className="font-heading font-bold text-tertiary-container block">
-            Status CMS: Aktif (Penyimpanan Interaktif Lokal)
+          <strong className="font-heading font-bold text-secondary block">
+            Status Basis Data: Terhubung ke Supabase Cloud (Live Multi-Perangkat)
           </strong>
-          <span className="text-tertiary">
-            Semua perubahan yang Anda buat (tambah, edit, hapus) langsung disimpan dan ditampilkan di website publik. Bila akun cloud Supabase diaktifkan, repository siap dialihkan ke database PostgreSQL tanpa merombak antarmuka.
+          <span className="text-secondary/90">
+            Proyek Supabase: <code className="font-bold font-mono">smbmebkindtrqbhnygti.supabase.co</code>. Setiap perubahan konten (berita, agenda, publikasi, hero banner, teks sambutan, sidebar, foto, dan video) langsung tersinkronisasi ke cloud dan dapat dilihat langsung oleh pengunjung di perangkat mana pun secara realtime.
           </span>
         </div>
       </div>
@@ -152,6 +153,14 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="flex flex-col gap-4">
           <h2 className="text-base font-heading font-bold text-primary">Tindakan Cepat</h2>
           <div className="bg-surface-container-lowest p-5 rounded-2xl border border-border-subtle shadow-sm flex flex-col gap-3">
+            <Link
+              to="/admin/tampilan"
+              className="flex items-center gap-3 p-3 rounded-xl bg-gold-light hover:bg-gold-light/80 text-primary font-heading font-bold text-xs transition-colors border border-kaltim-gold/40 shadow-xs"
+            >
+              <Sliders className="w-4 h-4 text-secondary flex-shrink-0" />
+              <span>Edit Tampilan & Konten Website (Hero, Slider, Sambutan, Sidebar, Footer)</span>
+            </Link>
+
             <Link
               to="/admin/berita"
               className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-primary font-heading font-semibold text-xs transition-colors"

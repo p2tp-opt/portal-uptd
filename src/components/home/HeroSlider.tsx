@@ -1,57 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Play, Pause, ShieldCheck, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-interface SlideData {
-  id: number;
-  title: string;
-  subtitle: string;
-  description: string;
-  imageUrl: string;
-}
-
-const slides: SlideData[] = [
-  {
-    id: 1,
-    title: 'Pengamatan & Pengendalian Hama Terpadu',
-    subtitle: 'Monitoring Rutin Kelapa Sawit, Karet & Kakao di Seluruh Wilayah',
-    description:
-      'Pendekatan ramah lingkungan berbasis kearifan ekologi dan pelestarian musuh alami untuk menjaga produktivitas kebun masyarakat.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=80',
-  },
-  {
-    id: 2,
-    title: 'Agens Pengendali Hayati Ramah Lingkungan',
-    subtitle: 'Laboratorium APH UPTD P2TP Samarinda',
-    description:
-      'Isolasi, perbanyakan, dan distribusi Trichoderma sp., Beauveria bassiana, dan Metarhizium anisopliae untuk pekebun mandiri.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=1600&q=80',
-  },
-  {
-    id: 3,
-    title: 'Bimbingan Teknis & Penguatan Kelompok Tani',
-    subtitle: 'Pendampingan Teknis Langsung Bersama Petani Lapangan',
-    description:
-      'Peningkatan kapasitas pekebun dalam identifikasi dini gejala penyakit perakaran dan aplikasi pestisida nabati.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=1600&q=80',
-  },
-  {
-    id: 4,
-    title: 'Mitigasi Cuaca & Peringatan Dini Serangan OPT',
-    subtitle: 'Sistem Informasi Pemantauan Iklim Perkebunan',
-    description:
-      'Kesiapsiagaan menghadapi kelembaban tinggi guna mencegah ledakan jamur akar dan penyakit busuk pupus.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=1600&q=80',
-  },
-];
+import { contentRepository } from '../../services/contentRepository';
+import { defaultSiteSettings } from '../../data/defaultSiteSettings';
+import { SiteSettings } from '../../types/siteSettings';
 
 export const HeroSlider: React.FC = () => {
+  const [heroSettings, setHeroSettings] = useState<SiteSettings['hero']>(defaultSiteSettings.hero);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+
+  useEffect(() => {
+    contentRepository.getSiteSettings().then((s) => {
+      if (s?.hero) {
+        setHeroSettings(s.hero);
+      }
+    });
+  }, []);
+
+  const slides = heroSettings.slides && heroSettings.slides.length > 0
+    ? heroSettings.slides
+    : defaultSiteSettings.hero.slides;
 
   // Periksa preferensi reduced motion
   useEffect(() => {
@@ -63,11 +32,11 @@ export const HeroSlider: React.FC = () => {
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
-  }, []);
+  }, [slides.length]);
 
   const prevSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  }, []);
+  }, [slides.length]);
 
   // Timer auto-play
   useEffect(() => {
@@ -76,7 +45,7 @@ export const HeroSlider: React.FC = () => {
     return () => clearInterval(interval);
   }, [isPlaying, nextSlide]);
 
-  const active = slides[currentSlide];
+  const active = slides[currentSlide % slides.length] || slides[0];
 
   return (
     <section
@@ -103,39 +72,41 @@ export const HeroSlider: React.FC = () => {
             </span>
           </div>
 
-          {/* Headline Utama */}
+          {/* Headline Utama Dinamis */}
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading text-on-primary font-extrabold leading-tight tracking-tight">
-            Mendukung Perlindungan <br className="hidden sm:inline" />
+            {heroSettings.headlinePrefix || 'Mendukung Perlindungan'}{' '}
+            <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-tertiary-fixed-dim via-kaltim-gold to-primary-fixed">
-              Tanaman Perkebunan
+              {heroSettings.headlineHighlight || 'Tanaman Perkebunan'}
             </span>{' '}
-            Kalimantan Timur
+            {heroSettings.headlineSuffix || 'Kalimantan Timur'}
           </h1>
 
-          {/* Motto & Deskripsi Slide */}
+          {/* Subheadline & Deskripsi */}
           <p className="text-sm sm:text-base lg:text-lg text-surface-container-high leading-relaxed max-w-2xl font-normal">
-            <strong className="text-tertiary-fixed font-semibold">“Profesional, Amanah dan Peduli”</strong> dalam mewujudkan tanaman perkebunan yang sehat, lestari, dan berdaya saing tinggi untuk kesejahteraan pekebun Kalimantan Timur.
+            {heroSettings.subheadline ||
+              '“Profesional, Amanah dan Peduli” dalam mewujudkan tanaman perkebunan yang sehat, lestari, dan berdaya saing tinggi untuk kesejahteraan pekebun Kalimantan Timur.'}
           </p>
 
-          {/* Tombol CTA Ganda */}
+          {/* Tombol CTA Ganda Dinamis */}
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <Link
-              to="/layanan"
+              to={heroSettings.primaryCtaLink || '/layanan'}
               className="inline-flex items-center gap-2 bg-kaltim-gold hover:bg-tertiary-fixed-dim text-on-tertiary-fixed px-6 py-3.5 rounded-xl font-heading font-bold text-sm transition-all shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-secondary"
             >
               <ShieldCheck className="w-5 h-5" />
-              <span>Kenali Layanan Kami</span>
+              <span>{heroSettings.primaryCtaText || 'Kenali Layanan Kami'}</span>
             </Link>
             <Link
-              to="/publikasi"
+              to={heroSettings.secondaryCtaLink || '/publikasi'}
               className="inline-flex items-center gap-2 bg-primary-container/80 hover:bg-secondary text-on-primary px-6 py-3.5 rounded-xl font-heading font-semibold text-sm transition-all shadow-sm hover:-translate-y-0.5 border border-secondary focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
             >
               <BookOpen className="w-5 h-5" />
-              <span>Lihat Publikasi & Panduan OPT</span>
+              <span>{heroSettings.secondaryCtaText || 'Lihat Publikasi & Panduan OPT'}</span>
             </Link>
           </div>
 
-          {/* Kontrol Slider & Indikator (A11y) */}
+          {/* Kontrol Slider & Indikator */}
           <div className="flex items-center justify-between pt-6 max-w-xl border-t border-secondary/40 mt-2">
             <div className="flex items-center gap-3">
               <button
@@ -165,7 +136,7 @@ export const HeroSlider: React.FC = () => {
 
               <div className="ml-2 flex flex-col">
                 <span className="text-xs font-heading text-tertiary-fixed font-bold tracking-wide">
-                  Slide {currentSlide + 1} / {slides.length} • {active.title}
+                  Slide {((currentSlide % slides.length) + 1)} / {slides.length} • {active.title}
                 </span>
                 <span className="text-[11px] text-surface-container-high line-clamp-1">
                   {active.subtitle}
@@ -181,7 +152,7 @@ export const HeroSlider: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentSlide(idx)}
                   className={`h-1.5 rounded-full transition-all ${
-                    idx === currentSlide
+                    idx === (currentSlide % slides.length)
                       ? 'w-6 bg-kaltim-gold'
                       : 'w-2 bg-surface-container-high/40 hover:bg-surface-container-high'
                   }`}

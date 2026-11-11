@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search, ShieldAlert } from 'lucide-react';
+import { contentRepository } from '../../services/contentRepository';
 
 interface NavItem {
   label: string;
@@ -21,10 +22,20 @@ const navItems: NavItem[] = [
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [ctaText, setCtaText] = useState('Info Siaga OPT');
+  const [ctaLink, setCtaLink] = useState('/kontak');
+
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    contentRepository.getSiteSettings().then((s) => {
+      if (s?.navbar?.ctaText) setCtaText(s.navbar.ctaText);
+      if (s?.navbar?.ctaLink) setCtaLink(s.navbar.ctaLink);
+    });
+  }, []);
 
   // Tutup drawer saat rute berpindah
   useEffect(() => {
@@ -116,13 +127,13 @@ export const Navbar: React.FC = () => {
               <Search className="w-3.5 h-3.5 absolute left-2.5 text-outline pointer-events-none" />
             </form>
 
-            {/* Tombol Tautan Info Siaga OPT (Mengarah ke Kontak/Layanan, bukan form transaksi di Tahap 1) */}
+            {/* Tombol Tautan Info Siaga OPT Dinamis */}
             <NavLink
-              to="/kontak"
+              to={ctaLink}
               className="hidden sm:inline-flex items-center gap-1.5 bg-kaltim-gold hover:bg-tertiary-fixed-dim text-on-tertiary-fixed font-heading font-bold text-xs px-3.5 py-1.5 rounded-full transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary"
             >
               <ShieldAlert className="w-4 h-4" />
-              <span>Info Siaga OPT</span>
+              <span>{ctaText}</span>
             </NavLink>
           </div>
         </div>
@@ -156,11 +167,11 @@ export const Navbar: React.FC = () => {
 
           <div className="pt-4 border-t border-secondary mt-2">
             <NavLink
-              to="/kontak"
+              to={ctaLink}
               className="flex items-center justify-center gap-2 bg-kaltim-gold text-on-tertiary-fixed font-heading font-bold py-3 px-4 rounded-xl text-center shadow-md"
             >
               <ShieldAlert className="w-5 h-5" />
-              <span>Info Siaga & Kontak Pengaduan OPT</span>
+              <span>{ctaText}</span>
             </NavLink>
           </div>
         </div>

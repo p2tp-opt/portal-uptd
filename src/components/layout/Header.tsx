@@ -33,6 +33,8 @@ export const Header: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const headerSettings = profile?.siteSettings?.header;
+
   return (
     <header className="w-full shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40">
       {/* TOP BAR */}
@@ -54,9 +56,19 @@ export const Header: React.FC = () => {
             )}
 
             <span className="hidden sm:inline text-on-primary-container">|</span>
-            <div className="hidden md:flex items-center gap-1.5 text-surface-container-low">
-              <Megaphone className="w-3.5 h-3.5 text-tertiary-fixed-dim" aria-hidden="true" />
-              <span>Portal Resmi Informasi Perlindungan Tanaman Perkebunan Kaltim</span>
+            <div className="hidden md:flex items-center gap-1.5 text-surface-container-low max-w-md truncate">
+              <Megaphone className="w-3.5 h-3.5 text-tertiary-fixed-dim flex-shrink-0" aria-hidden="true" />
+              {headerSettings?.tickerText ? (
+                <Link
+                  to={headerSettings.tickerLink || '/berita'}
+                  className="hover:text-tertiary-fixed transition-colors truncate"
+                >
+                  <span className="font-bold text-kaltim-gold mr-1">[{headerSettings.hotlineTag || 'INFO SIAGA'}]:</span>
+                  {headerSettings.tickerText}
+                </Link>
+              ) : (
+                <span>{headerSettings?.topNotice || 'Portal Resmi Informasi Perlindungan Tanaman Perkebunan Kaltim'}</span>
+              )}
             </div>
           </div>
 
@@ -65,7 +77,7 @@ export const Header: React.FC = () => {
             <div className="flex items-center gap-1.5">
               <Phone className="w-3.5 h-3.5 text-tertiary-fixed-dim" aria-hidden="true" />
               <a
-                href="tel:0541273580"
+                href={`tel:${(profile?.phone || '0541273580').replace(/[^0-9]/g, '')}`}
                 className="font-medium hover:text-tertiary-fixed-dim transition-colors"
               >
                 {profile?.phone || '(0541) 273580 / (0541) 743488'}

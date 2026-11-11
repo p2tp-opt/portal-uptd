@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle, Home } from 'lucide-react';
+import { Lock, User, ArrowRight, AlertCircle, Home, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 
 export const AdminLoginPage: React.FC = () => {
-  const [email, setEmail] = useState('operator@p2tp.kaltimprov.go.id');
+  const [username, setUsername] = useState('operatorp2tp');
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export const AdminLoginPage: React.FC = () => {
     setError('');
     setLoading(true);
 
-    const res = await login(email, password);
+    const res = await login(username, password);
     setLoading(false);
 
     if (res.success) {
@@ -31,21 +31,25 @@ export const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-surface p-4">
-      <div className="w-full max-w-md bg-surface-container-lowest p-8 rounded-3xl shadow-xl border border-border-subtle flex flex-col gap-6">
+    <div className="min-h-screen flex flex-col justify-between items-center bg-surface p-4 sm:p-6">
+      {/* Top spacing */}
+      <div className="w-full max-w-md pt-6" />
+
+      {/* Main Login Card */}
+      <div className="w-full max-w-md bg-surface-container-lowest p-8 sm:p-10 rounded-3xl shadow-xl border border-border-subtle flex flex-col gap-6">
         {/* Header Logo */}
         <div className="flex flex-col items-center text-center gap-2">
           <div className="w-14 h-14 rounded-2xl bg-primary text-kaltim-gold flex items-center justify-center font-heading font-extrabold text-xl shadow-md border border-secondary mb-1">
             P2TP
           </div>
-          <span className="text-xs uppercase font-heading font-bold text-secondary tracking-wider">
+          <span className="text-[11px] uppercase font-heading font-bold text-secondary tracking-wider">
             Portal Administrasi Resmi
           </span>
           <h1 className="text-2xl font-heading font-extrabold text-primary">
             Login Operator CMS
           </h1>
           <p className="text-xs text-text-muted">
-            Masuk untuk mengelola publikasi berita, agenda, SOP, dan profil website UPTD P2TP.
+            Masuk untuk mengelola seluruh konten, tampilan, publikasi berita, agenda, dan profil website UPTD P2TP.
           </p>
         </div>
 
@@ -58,48 +62,41 @@ export const AdminLoginPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-heading font-bold text-on-surface" htmlFor="admin-email">
-              Email Operator
+            <label className="text-xs font-heading font-bold text-on-surface" htmlFor="operator-id">
+              ID / Username Operator
             </label>
             <div className="relative">
               <input
-                id="admin-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="operator-id"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full pl-9 pr-3 py-2 text-xs bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
-                placeholder="nama@p2tp.kaltimprov.go.id"
+                className="w-full pl-9 pr-3 py-2.5 text-xs bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
+                placeholder="operatorp2tp"
+                autoComplete="username"
               />
-              <Mail className="w-4 h-4 text-outline absolute left-3 top-2.5 pointer-events-none" />
+              <User className="w-4 h-4 text-outline absolute left-3 top-3 pointer-events-none" />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-heading font-bold text-on-surface" htmlFor="admin-password">
+            <label className="text-xs font-heading font-bold text-on-surface" htmlFor="operator-password">
               Kata Sandi
             </label>
             <div className="relative">
               <input
-                id="admin-password"
+                id="operator-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-9 pr-3 py-2 text-xs bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
+                className="w-full pl-9 pr-3 py-2.5 text-xs bg-surface-container-low rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-kaltim-gold"
                 placeholder="••••••••"
+                autoComplete="current-password"
               />
-              <Lock className="w-4 h-4 text-outline absolute left-3 top-2.5 pointer-events-none" />
+              <Lock className="w-4 h-4 text-outline absolute left-3 top-3 pointer-events-none" />
             </div>
-          </div>
-
-          <div className="bg-gold-light p-3 rounded-xl border border-kaltim-gold/40 text-[11px] text-tertiary">
-            <div className="font-bold flex items-center gap-1 mb-0.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-kaltim-gold" />
-              <span>Akun Uji Coba Operator:</span>
-            </div>
-            Email: <code className="font-bold">operator@p2tp.kaltimprov.go.id</code><br />
-            Password: <code className="font-bold">admin123</code>
           </div>
 
           <button
@@ -111,7 +108,8 @@ export const AdminLoginPage: React.FC = () => {
               <span>Memproses...</span>
             ) : (
               <>
-                <span>Masuk ke Dashboard</span>
+                <ShieldCheck className="w-4 h-4 text-kaltim-gold" />
+                <span>Masuk ke Panel Operator</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -128,6 +126,16 @@ export const AdminLoginPage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Footer Login Page */}
+      <footer className="w-full max-w-md pb-6 pt-4 text-center text-xs text-text-muted flex flex-col items-center gap-1">
+        <p className="font-heading font-semibold text-primary">
+          © {new Date().getFullYear()} UPTD Pengembangan Perlindungan Tanaman Perkebunan
+        </p>
+        <p className="text-[11px] text-outline">
+          Dinas Perkebunan Pemerintah Provinsi Kalimantan Timur • Benua Etam
+        </p>
+      </footer>
     </div>
   );
 };

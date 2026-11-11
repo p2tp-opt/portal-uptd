@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Bell, BookOpen, Phone, MessageSquare, Clock, ShieldAlert } from 'lucide-react';
-import { SampleBadge } from '../common/SampleBadge';
+import { contentRepository } from '../../services/contentRepository';
+import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 
 export const Sidebar: React.FC = () => {
+  const [sidebarSettings, setSidebarSettings] = useState(defaultSiteSettings.sidebar);
+
+  useEffect(() => {
+    contentRepository.getSiteSettings().then((s) => {
+      if (s?.sidebar) {
+        setSidebarSettings(s.sidebar);
+      }
+    });
+  }, []);
+
   return (
     <aside aria-label="Sidebar Informasi Pelayanan" className="flex flex-col gap-6">
-      {/* WIDGET 1: Peringatan Dini & Status Cuaca OPT */}
+      {/* WIDGET 1: Peringatan Dini & Status Cuaca OPT Dinamis */}
       <div className="bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-2xl p-6 shadow-md border border-secondary/50 relative overflow-hidden">
         <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-kaltim-gold/15 rounded-full blur-xl pointer-events-none" />
 
@@ -15,34 +26,37 @@ export const Sidebar: React.FC = () => {
             <AlertTriangle className="w-3.5 h-3.5" />
             <span>Peringatan Dini OPT</span>
           </span>
-          <SampleBadge label="Simulasi" />
+          <span className="text-[10px] bg-secondary/80 text-on-secondary px-2 py-0.5 rounded-full font-bold">
+            {sidebarSettings.alertLevel || 'SIAGA II'}
+          </span>
         </div>
 
         <h3 className="text-base font-heading font-bold text-tertiary-fixed mb-2">
-          Kesiapsiagaan Cuaca Lembab & Hujan Tinggi
+          {sidebarSettings.alertTitle || 'Kesiapsiagaan Cuaca Lembab & Hujan Tinggi'}
         </h3>
 
         <p className="text-xs text-surface-container-high mb-4 leading-relaxed">
-          Waspadai potensi penyebaran jamur akar putih pada tanaman karet dan penyakit busuk buah kakao saat curah hujan meningkat di sentra perkebunan rakyat.
+          {sidebarSettings.alertDescription ||
+            'Waspadai potensi penyebaran jamur akar putih pada tanaman karet dan penyakit busuk buah kakao saat curah hujan meningkat di sentra perkebunan rakyat.'}
         </p>
 
         <div className="bg-primary/50 rounded-xl p-3 flex flex-col gap-2 mb-4 text-xs border border-secondary/40">
           <div className="flex items-center justify-between">
-            <span className="text-surface-container-low">Indeks Kelembaban:</span>
-            <span className="font-bold text-tertiary-fixed-dim">Tinggi (Musim Penghujan)</span>
+            <span className="text-surface-container-low">Komoditas Terdampak:</span>
+            <span className="font-bold text-tertiary-fixed-dim">{sidebarSettings.alertCommodity || 'Kelapa Sawit & Karet'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-surface-container-low">Status Posko:</span>
-            <span className="font-bold text-primary-fixed">Siaga Lapangan</span>
+            <span className="font-bold text-primary-fixed">{sidebarSettings.alertLevel || 'Siaga Lapangan'}</span>
           </div>
         </div>
 
         <Link
-          to="/kontak"
+          to={sidebarSettings.alertCtaLink || '/kontak'}
           className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-kaltim-gold hover:bg-tertiary-fixed-dim text-on-tertiary-fixed font-heading text-xs font-bold rounded-xl transition-colors shadow-sm"
         >
           <ShieldAlert className="w-4 h-4" />
-          <span>Informasi Kontak Petugas Wilayah</span>
+          <span>{sidebarSettings.alertCtaText || 'Informasi Kontak Petugas Wilayah'}</span>
         </Link>
       </div>
 
@@ -51,9 +65,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
           <h3 className="text-sm font-heading font-bold text-primary flex items-center gap-2">
             <Bell className="w-4 h-4 text-secondary" />
-            <span>Agenda Singkat</span>
+            <span>Agenda Singkat Lapangan</span>
           </h3>
-          <SampleBadge />
         </div>
 
         <div className="flex flex-col gap-3 text-xs">
@@ -121,7 +134,7 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* WIDGET 4: Jam Pelayanan & Kontak Cepat */}
+      {/* WIDGET 4: Jam Pelayanan & Kontak Cepat Dinamis */}
       <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-border-subtle flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-badge-activity-bg text-secondary flex items-center justify-center flex-shrink-0">
@@ -136,11 +149,11 @@ export const Sidebar: React.FC = () => {
         <div className="bg-surface-container-low p-3.5 rounded-xl flex flex-col gap-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-text-muted">Senin - Kamis:</span>
-            <span className="font-bold text-primary">08.00 - 16.00 WITA</span>
+            <span className="font-bold text-primary">{sidebarSettings.hotlineHoursWeekday || '08.00 - 16.00 WITA'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-text-muted">Jumat:</span>
-            <span className="font-bold text-primary">08.00 - 11.00 WITA</span>
+            <span className="font-bold text-primary">{sidebarSettings.hotlineHoursFriday || '08.00 - 11.00 WITA'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-text-muted">Sabtu - Minggu:</span>
@@ -150,11 +163,11 @@ export const Sidebar: React.FC = () => {
 
         <div className="flex flex-col gap-2 pt-1">
           <a
-            href="tel:0541273580"
+            href={`tel:${(sidebarSettings.hotlinePhone || '0541273580').replace(/[^0-9]/g, '')}`}
             className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary text-on-primary hover:bg-secondary font-heading text-xs font-bold rounded-xl transition-colors"
           >
             <Phone className="w-4 h-4" />
-            <span>Telepon: (0541) 273580</span>
+            <span>Telepon: {sidebarSettings.hotlinePhone || '(0541) 273580'}</span>
           </a>
           <Link
             to="/kontak"

@@ -1,6 +1,9 @@
 // src/types/content.ts
 // Mengikuti SCHEMA.md dan PRD Bagian 12
 
+import { SiteSettings } from './siteSettings';
+export * from './siteSettings';
+
 export type ISODate = string;      // Contoh: "2026-11-11"
 export type ISODateTime = string;  // Contoh: "2026-11-11T09:48:00+08:00"
 
@@ -88,6 +91,7 @@ export interface ProfileContact {
   email?: string;
   officeHours?: string;
   socialLinks: SocialLink[];
+  siteSettings?: SiteSettings;
   verified: boolean;        // false selama masih data placeholder
 }
 

@@ -1,6 +1,6 @@
 // src/services/contentRepository.ts
 // Lapisan Abstraksi Data (Repository Pattern)
-// Mendukung Supabase Cloud Database (Tahap 2) dengan fallback otomatis ke LocalStorage
+// Mendukung Supabase Cloud Database secara Multi-Perangkat (Live Sync) dengan fallback otomatis ke LocalStorage
 
 import {
   News,
@@ -10,6 +10,7 @@ import {
   Video,
   ProfileContact,
   ListOptions,
+  SiteSettings,
 } from '../types/content';
 import {
   mockNews,
@@ -19,6 +20,7 @@ import {
   mockVideos,
   mockProfile,
 } from '../data/mockData';
+import { defaultSiteSettings } from '../data/defaultSiteSettings';
 import { supabase } from './supabaseClient';
 
 export interface ContentRepository {
@@ -31,27 +33,34 @@ export interface ContentRepository {
   listPhotos(opts?: ListOptions): Promise<Photo[]>;
   listVideos(opts?: ListOptions): Promise<Video[]>;
   getProfile(): Promise<ProfileContact>;
+  getSiteSettings(): Promise<SiteSettings>;
 
-  // CRUD
+  // CRUD Berita
   createNews(item: Omit<News, 'id' | 'slug'>): Promise<News>;
   updateNews(id: string, item: Partial<News>): Promise<News | null>;
   deleteNews(id: string): Promise<boolean>;
 
+  // CRUD Agenda
   createAgenda(item: Omit<Agenda, 'id'>): Promise<Agenda>;
   updateAgenda(id: string, item: Partial<Agenda>): Promise<Agenda | null>;
   deleteAgenda(id: string): Promise<boolean>;
 
+  // CRUD Publikasi
   createPublication(item: Omit<Publication, 'id' | 'slug'>): Promise<Publication>;
   updatePublication(id: string, item: Partial<Publication>): Promise<Publication | null>;
   deletePublication(id: string): Promise<boolean>;
 
+  // CRUD Galeri Foto
   createPhoto(item: Omit<Photo, 'id'>): Promise<Photo>;
   deletePhoto(id: string): Promise<boolean>;
 
+  // CRUD Galeri Video
   createVideo(item: Omit<Video, 'id'>): Promise<Video>;
   deleteVideo(id: string): Promise<boolean>;
 
+  // Pengaturan & Kustomisasi
   updateProfile(profile: Partial<ProfileContact>): Promise<ProfileContact>;
+  updateSiteSettings(settings: Partial<SiteSettings>): Promise<SiteSettings>;
   resetToSampleData(): Promise<void>;
 }
 
@@ -62,6 +71,7 @@ const STORAGE_KEYS = {
   PHOTOS: 'p2tp_cms_photos',
   VIDEOS: 'p2tp_cms_videos',
   PROFILE: 'p2tp_cms_profile',
+  SITE_SETTINGS: 'p2tp_cms_site_settings',
 };
 
 function generateSlug(text: string): string {
@@ -74,7 +84,7 @@ function generateSlug(text: string): string {
 }
 
 // --------------------------------------------------------------------------
-// 1. IMPLEMENTASI LOCAL STORAGE (Fallback & Standalone)
+// 1. IMPLEMENTASI LOCAL STORAGE (Fallback & Offline Standalone)
 // --------------------------------------------------------------------------
 export class LocalStorageContentRepository implements ContentRepository {
   private getStorage<T>(key: string, defaultData: T): T {
@@ -153,18 +163,10 @@ export class LocalStorageContentRepository implements ContentRepository {
 
   async listAgenda(opts?: ListOptions & { upcomingOnly?: boolean }): Promise<Agenda[]> {
     let result = this.getStorage<Agenda[]>(STORAGE_KEYS.AGENDA, mockAgenda);
-    if (opts?.upcomingOnly) result = result.filter((a) => a.status === 'akan-datang');
-    if (opts?.query) {
-      const q = opts.query.toLowerCase();
-      result = result.filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          a.description.toLowerCase().includes(q) ||
-          (a.location && a.location.toLowerCase().includes(q))
-      );
+    if (opts?.upcomingOnly) {
+      result = result.filter((a) => a.status === 'akan-datang');
     }
     result.sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-    if (opts?.offset !== undefined) result = result.slice(opts.offset);
     if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
@@ -208,11 +210,12 @@ export class LocalStorageContentRepository implements ContentRepository {
     if (opts?.query) {
       const q = opts.query.toLowerCase();
       result = result.filter(
-        (p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
       );
     }
     result.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    if (opts?.offset !== undefined) result = result.slice(opts.offset);
     if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
@@ -226,7 +229,7 @@ export class LocalStorageContentRepository implements ContentRepository {
     const list = this.getStorage<Publication[]>(STORAGE_KEYS.PUBLICATIONS, mockPublications);
     const id = `pub-${Date.now()}`;
     const slug = `${generateSlug(item.title)}-${Date.now().toString().slice(-4)}`;
-    const newItem: Publication = { ...item, id, slug };
+    const newItem: Publication = { ...item, id, slug, status: item.status || 'published' };
     list.unshift(newItem);
     this.setStorage(STORAGE_KEYS.PUBLICATIONS, list);
     return newItem;
@@ -236,9 +239,13 @@ export class LocalStorageContentRepository implements ContentRepository {
     const list = this.getStorage<Publication[]>(STORAGE_KEYS.PUBLICATIONS, mockPublications);
     const idx = list.findIndex((p) => p.id === id);
     if (idx === -1) return null;
-    list[idx] = { ...list[idx], ...item };
+    const updated = { ...list[idx], ...item };
+    if (item.title && item.title !== list[idx].title) {
+      updated.slug = `${generateSlug(item.title)}-${id.slice(-4)}`;
+    }
+    list[idx] = updated;
     this.setStorage(STORAGE_KEYS.PUBLICATIONS, list);
-    return list[idx];
+    return updated;
   }
 
   async deletePublication(id: string): Promise<boolean> {
@@ -254,7 +261,6 @@ export class LocalStorageContentRepository implements ContentRepository {
     if (opts?.category) {
       result = result.filter((p) => p.category.toLowerCase() === opts.category?.toLowerCase());
     }
-    if (opts?.offset !== undefined) result = result.slice(opts.offset);
     if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
@@ -281,8 +287,6 @@ export class LocalStorageContentRepository implements ContentRepository {
     if (opts?.category) {
       result = result.filter((v) => v.category.toLowerCase() === opts.category?.toLowerCase());
     }
-    result.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    if (opts?.offset !== undefined) result = result.slice(opts.offset);
     if (opts?.limit !== undefined) result = result.slice(0, opts.limit);
     return result;
   }
@@ -305,28 +309,59 @@ export class LocalStorageContentRepository implements ContentRepository {
   }
 
   async getProfile(): Promise<ProfileContact> {
-    return this.getStorage<ProfileContact>(STORAGE_KEYS.PROFILE, mockProfile);
+    const profile = this.getStorage<ProfileContact>(STORAGE_KEYS.PROFILE, mockProfile);
+    const settings = await this.getSiteSettings();
+    return { ...profile, siteSettings: settings };
   }
 
   async updateProfile(profile: Partial<ProfileContact>): Promise<ProfileContact> {
-    const current = this.getStorage<ProfileContact>(STORAGE_KEYS.PROFILE, mockProfile);
-    const updated = { ...current, ...profile };
+    const current = await this.getProfile();
+    const updated: ProfileContact = {
+      ...current,
+      ...profile,
+      siteSettings: profile.siteSettings || current.siteSettings || defaultSiteSettings,
+    };
     this.setStorage(STORAGE_KEYS.PROFILE, updated);
+    if (profile.siteSettings) {
+      this.setStorage(STORAGE_KEYS.SITE_SETTINGS, profile.siteSettings);
+    }
+    return updated;
+  }
+
+  async getSiteSettings(): Promise<SiteSettings> {
+    return this.getStorage<SiteSettings>(STORAGE_KEYS.SITE_SETTINGS, defaultSiteSettings);
+  }
+
+  async updateSiteSettings(settings: Partial<SiteSettings>): Promise<SiteSettings> {
+    const current = await this.getSiteSettings();
+    const updated: SiteSettings = {
+      header: { ...current.header, ...(settings.header || {}) },
+      navbar: { ...current.navbar, ...(settings.navbar || {}) },
+      hero: { ...current.hero, ...(settings.hero || {}) },
+      welcome: { ...current.welcome, ...(settings.welcome || {}) },
+      sidebar: { ...current.sidebar, ...(settings.sidebar || {}) },
+      agendaPubSection: { ...current.agendaPubSection, ...(settings.agendaPubSection || {}) },
+      gallerySection: { ...current.gallerySection, ...(settings.gallerySection || {}) },
+      videoSection: { ...current.videoSection, ...(settings.videoSection || {}) },
+      footer: { ...current.footer, ...(settings.footer || {}) },
+    };
+    this.setStorage(STORAGE_KEYS.SITE_SETTINGS, updated);
     return updated;
   }
 
   async resetToSampleData(): Promise<void> {
-    localStorage.removeItem(STORAGE_KEYS.NEWS);
-    localStorage.removeItem(STORAGE_KEYS.AGENDA);
-    localStorage.removeItem(STORAGE_KEYS.PUBLICATIONS);
-    localStorage.removeItem(STORAGE_KEYS.PHOTOS);
-    localStorage.removeItem(STORAGE_KEYS.VIDEOS);
-    localStorage.removeItem(STORAGE_KEYS.PROFILE);
+    this.setStorage(STORAGE_KEYS.NEWS, mockNews);
+    this.setStorage(STORAGE_KEYS.AGENDA, mockAgenda);
+    this.setStorage(STORAGE_KEYS.PUBLICATIONS, mockPublications);
+    this.setStorage(STORAGE_KEYS.PHOTOS, mockPhotos);
+    this.setStorage(STORAGE_KEYS.VIDEOS, mockVideos);
+    this.setStorage(STORAGE_KEYS.PROFILE, mockProfile);
+    this.setStorage(STORAGE_KEYS.SITE_SETTINGS, defaultSiteSettings);
   }
 }
 
 // --------------------------------------------------------------------------
-// 2. IMPLEMENTASI SUPABASE (Cloud Database)
+// 2. IMPLEMENTASI SUPABASE (Cloud Database Multi-Perangkat Terpusat)
 // --------------------------------------------------------------------------
 export class SupabaseContentRepository implements ContentRepository {
   private fallback = new LocalStorageContentRepository();
@@ -339,7 +374,7 @@ export class SupabaseContentRepository implements ContentRepository {
       if (opts?.limit) query = query.limit(opts.limit);
 
       const { data, error } = await query;
-      if (error || !data || data.length === 0) return this.fallback.listNews(opts);
+      if (error || !data) return this.fallback.listNews(opts);
 
       return data.map((d) => ({
         id: d.id,
@@ -477,7 +512,7 @@ export class SupabaseContentRepository implements ContentRepository {
       if (opts?.limit) query = query.limit(opts.limit);
 
       const { data, error } = await query;
-      if (error || !data || data.length === 0) return this.fallback.listAgenda(opts);
+      if (error || !data) return this.fallback.listAgenda(opts);
 
       return data.map((d) => ({
         id: d.id,
@@ -586,7 +621,7 @@ export class SupabaseContentRepository implements ContentRepository {
       if (opts?.limit) query = query.limit(opts.limit);
 
       const { data, error } = await query;
-      if (error || !data || data.length === 0) return this.fallback.listPublications(opts);
+      if (error || !data) return this.fallback.listPublications(opts);
 
       return data.map((d) => ({
         id: d.id,
@@ -625,6 +660,7 @@ export class SupabaseContentRepository implements ContentRepository {
             file_type: item.fileType,
             category: item.category,
             published_at: item.publishedAt,
+            status: item.status || 'published',
           },
         ])
         .select()
@@ -642,6 +678,7 @@ export class SupabaseContentRepository implements ContentRepository {
         fileType: data.file_type,
         category: data.category,
         publishedAt: data.published_at,
+        status: data.status,
       };
     } catch {
       return this.fallback.createPublication(item);
@@ -658,6 +695,7 @@ export class SupabaseContentRepository implements ContentRepository {
           description: item.description,
           document_url: item.documentUrl,
           file_size: item.fileSize,
+          file_type: item.fileType,
           category: item.category,
         })
         .eq('id', id)
@@ -665,7 +703,6 @@ export class SupabaseContentRepository implements ContentRepository {
         .single();
 
       if (error || !data) return this.fallback.updatePublication(id, item);
-
       return {
         id: data.id,
         title: data.title,
@@ -676,6 +713,7 @@ export class SupabaseContentRepository implements ContentRepository {
         fileType: data.file_type,
         category: data.category,
         publishedAt: data.published_at,
+        status: data.status,
       };
     } catch {
       return this.fallback.updatePublication(id, item);
@@ -695,8 +733,12 @@ export class SupabaseContentRepository implements ContentRepository {
   async listPhotos(opts?: ListOptions): Promise<Photo[]> {
     if (!supabase) return this.fallback.listPhotos(opts);
     try {
-      const { data, error } = await supabase.from('photos').select('*');
-      if (error || !data || data.length === 0) return this.fallback.listPhotos(opts);
+      let query = supabase.from('photos').select('*').order('taken_at', { ascending: false });
+      if (opts?.category) query = query.eq('category', opts.category);
+      if (opts?.limit) query = query.limit(opts.limit);
+
+      const { data, error } = await query;
+      if (error || !data) return this.fallback.listPhotos(opts);
 
       return data.map((d) => ({
         id: d.id,
@@ -760,7 +802,7 @@ export class SupabaseContentRepository implements ContentRepository {
     if (!supabase) return this.fallback.listVideos(opts);
     try {
       const { data, error } = await supabase.from('videos').select('*');
-      if (error || !data || data.length === 0) return this.fallback.listVideos(opts);
+      if (error || !data) return this.fallback.listVideos(opts);
 
       return data.map((d) => ({
         id: d.id,
@@ -829,18 +871,45 @@ export class SupabaseContentRepository implements ContentRepository {
       const { data, error } = await supabase.from('site_profile').select('*').eq('id', 1).single();
       if (error || !data) return this.fallback.getProfile();
 
-      return {
+      let socialLinks = [];
+      let siteSettings = defaultSiteSettings;
+
+      if (Array.isArray(data.social_links)) {
+        socialLinks = data.social_links;
+      } else if (data.social_links && typeof data.social_links === 'object') {
+        socialLinks = Array.isArray(data.social_links.links) ? data.social_links.links : [];
+        if (data.social_links.siteSettings) {
+          siteSettings = {
+            header: { ...defaultSiteSettings.header, ...(data.social_links.siteSettings.header || {}) },
+            navbar: { ...defaultSiteSettings.navbar, ...(data.social_links.siteSettings.navbar || {}) },
+            hero: { ...defaultSiteSettings.hero, ...(data.social_links.siteSettings.hero || {}) },
+            welcome: { ...defaultSiteSettings.welcome, ...(data.social_links.siteSettings.welcome || {}) },
+            sidebar: { ...defaultSiteSettings.sidebar, ...(data.social_links.siteSettings.sidebar || {}) },
+            agendaPubSection: { ...defaultSiteSettings.agendaPubSection, ...(data.social_links.siteSettings.agendaPubSection || {}) },
+            gallerySection: { ...defaultSiteSettings.gallerySection, ...(data.social_links.siteSettings.gallerySection || {}) },
+            videoSection: { ...defaultSiteSettings.videoSection, ...(data.social_links.siteSettings.videoSection || {}) },
+            footer: { ...defaultSiteSettings.footer, ...(data.social_links.siteSettings.footer || {}) },
+          };
+        }
+      }
+
+      const resProfile: ProfileContact = {
         institutionName: data.institution_name,
         motto: data.motto,
         description: data.description,
-        logoUrl: data.logo_url,
+        logoUrl: data.logo_url || '',
         address: data.address,
         phone: data.phone,
         email: data.email,
         officeHours: data.office_hours,
-        socialLinks: data.social_links || [],
+        socialLinks,
+        siteSettings,
         verified: data.verified,
       };
+
+      // Simpan ke local cache untuk fallback offline
+      this.fallback.updateProfile(resProfile);
+      return resProfile;
     } catch {
       return this.fallback.getProfile();
     }
@@ -849,40 +918,75 @@ export class SupabaseContentRepository implements ContentRepository {
   async updateProfile(profile: Partial<ProfileContact>): Promise<ProfileContact> {
     if (!supabase) return this.fallback.updateProfile(profile);
     try {
+      const current = await this.getProfile();
+      const updatedProfile: ProfileContact = {
+        institutionName: profile.institutionName ?? current.institutionName,
+        motto: profile.motto ?? current.motto,
+        description: profile.description ?? current.description,
+        logoUrl: profile.logoUrl !== undefined ? profile.logoUrl : current.logoUrl,
+        address: profile.address ?? current.address,
+        phone: profile.phone ?? current.phone,
+        email: profile.email ?? current.email,
+        officeHours: profile.officeHours ?? current.officeHours,
+        socialLinks: profile.socialLinks ?? current.socialLinks,
+        siteSettings: profile.siteSettings ?? current.siteSettings ?? defaultSiteSettings,
+        verified: profile.verified ?? current.verified,
+      };
+
+      const payload = {
+        id: 1,
+        institution_name: updatedProfile.institutionName,
+        motto: updatedProfile.motto,
+        description: updatedProfile.description,
+        logo_url: updatedProfile.logoUrl,
+        address: updatedProfile.address,
+        phone: updatedProfile.phone,
+        email: updatedProfile.email,
+        office_hours: updatedProfile.officeHours,
+        social_links: {
+          links: updatedProfile.socialLinks,
+          siteSettings: updatedProfile.siteSettings,
+        },
+        verified: updatedProfile.verified,
+      };
+
       const { data, error } = await supabase
         .from('site_profile')
-        .upsert({
-          id: 1,
-          institution_name: profile.institutionName,
-          motto: profile.motto,
-          description: profile.description,
-          logo_url: profile.logoUrl,
-          address: profile.address,
-          phone: profile.phone,
-          email: profile.email,
-          office_hours: profile.officeHours,
-          verified: profile.verified,
-        })
+        .upsert(payload)
         .select()
         .single();
 
       if (error || !data) return this.fallback.updateProfile(profile);
 
-      return {
-        institutionName: data.institution_name,
-        motto: data.motto,
-        description: data.description,
-        logoUrl: data.logo_url,
-        address: data.address,
-        phone: data.phone,
-        email: data.email,
-        officeHours: data.office_hours,
-        socialLinks: data.social_links || [],
-        verified: data.verified,
-      };
+      // Simpan ke local cache
+      this.fallback.updateProfile(updatedProfile);
+      return updatedProfile;
     } catch {
       return this.fallback.updateProfile(profile);
     }
+  }
+
+  async getSiteSettings(): Promise<SiteSettings> {
+    const profile = await this.getProfile();
+    return profile.siteSettings || defaultSiteSettings;
+  }
+
+  async updateSiteSettings(settings: Partial<SiteSettings>): Promise<SiteSettings> {
+    const current = await this.getSiteSettings();
+    const updatedSettings: SiteSettings = {
+      header: { ...current.header, ...(settings.header || {}) },
+      navbar: { ...current.navbar, ...(settings.navbar || {}) },
+      hero: { ...current.hero, ...(settings.hero || {}) },
+      welcome: { ...current.welcome, ...(settings.welcome || {}) },
+      sidebar: { ...current.sidebar, ...(settings.sidebar || {}) },
+      agendaPubSection: { ...current.agendaPubSection, ...(settings.agendaPubSection || {}) },
+      gallerySection: { ...current.gallerySection, ...(settings.gallerySection || {}) },
+      videoSection: { ...current.videoSection, ...(settings.videoSection || {}) },
+      footer: { ...current.footer, ...(settings.footer || {}) },
+    };
+
+    await this.updateProfile({ siteSettings: updatedSettings });
+    return updatedSettings;
   }
 
   async resetToSampleData(): Promise<void> {

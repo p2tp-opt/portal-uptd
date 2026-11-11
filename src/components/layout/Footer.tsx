@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, ChevronRight, ExternalLink, ShieldCheck, Video, Camera, MessageCircle } from 'lucide-react';
-import { SampleBadge } from '../common/SampleBadge';
 import { contentRepository } from '../../services/contentRepository';
 import { ProfileContact } from '../../types/content';
 
@@ -12,6 +11,8 @@ export const Footer: React.FC = () => {
   useEffect(() => {
     contentRepository.getProfile().then(setProfile);
   }, []);
+
+  const footerSettings = profile?.siteSettings?.footer;
 
   return (
     <footer className="w-full bg-primary text-on-primary">
@@ -41,7 +42,8 @@ export const Footer: React.FC = () => {
               </div>
             </div>
             <p className="text-xs text-surface-container-high leading-relaxed">
-              {profile?.description ||
+              {footerSettings?.description ||
+                profile?.description ||
                 'Unit Pelaksana Teknis Daerah Pengembangan Perlindungan Tanaman Perkebunan pada Dinas Perkebunan Provinsi Kalimantan Timur mengawal ketahanan dan perlindungan komoditas strategis perkebunan.'}
             </p>
             <div className="inline-flex items-center gap-2 bg-primary-container px-3 py-1.5 rounded-lg border border-secondary text-xs">
@@ -58,7 +60,6 @@ export const Footer: React.FC = () => {
               <h3 className="font-heading font-bold text-sm text-tertiary-fixed">
                 Alamat & Kontak Resmi
               </h3>
-              {!profile?.verified && <SampleBadge label="Placeholder" />}
             </div>
 
             <div className="flex items-start gap-2.5 text-surface-container-high">
@@ -81,7 +82,7 @@ export const Footer: React.FC = () => {
 
             <div className="flex items-start gap-2.5 text-surface-container-high pt-1">
               <Clock className="w-4 h-4 text-kaltim-gold flex-shrink-0 mt-0.5" />
-              <span>
+              <span className="whitespace-pre-line">
                 {profile?.officeHours ||
                   "Senin - Kamis: 08.00 - 16.00 WITA\nJum'at: 08.00 - 11.00 WITA\nSabtu, Minggu & Hari Libur: Tutup"}
               </span>
@@ -91,7 +92,7 @@ export const Footer: React.FC = () => {
           {/* Kolom 3: Tautan Cepat & Layanan */}
           <div className="flex flex-col gap-3 text-xs">
             <h3 className="font-heading font-bold text-sm text-tertiary-fixed border-b border-primary-container pb-2">
-              Tautan Cepat & Layanan
+              {footerSettings?.quickLinksTitle || 'Tautan Cepat & Layanan'}
             </h3>
             <ul className="flex flex-col gap-2 text-surface-container-high">
               <li>
@@ -101,109 +102,107 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/berita" className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5">
+                <Link to="/layanan" className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5">
                   <ChevronRight className="w-3.5 h-3.5" />
-                  <span>Peringatan Dini & Pemantauan OPT</span>
+                  <span>Laboratorium Agens Pengendali Hayati</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/layanan" className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  <span>Pengamatan & Surveilans OPT</span>
                 </Link>
               </li>
               <li>
                 <Link to="/publikasi" className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5">
                   <ChevronRight className="w-3.5 h-3.5" />
-                  <span>Unduh SOP & Pedoman Teknis</span>
+                  <span>Standar Operasional Prosedur (SOP)</span>
                 </Link>
               </li>
               <li>
-                <a
-                  href="https://disbun.kaltimprov.go.id"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Dinas Perkebunan Prov. Kaltim</span>
-                </a>
+                <Link to="/kontak" className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5">
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  <span>Posko Siaga Pengaduan Petani</span>
+                </Link>
               </li>
               <li>
-                <a
-                  href="https://kaltimprov.go.id"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Pemerintah Provinsi Kalimantan Timur</span>
-                </a>
+                <Link to="/admin/login" className="hover:text-tertiary-fixed-dim transition-colors flex items-center gap-1.5 text-tertiary-fixed font-semibold pt-1">
+                  <ChevronRight className="w-3.5 h-3.5 text-kaltim-gold" />
+                  <span>Login Operator CMS</span>
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Kolom 4: Saluran Komunikasi Publik */}
+          {/* Kolom 4: Saluran Informasi & Media Sosial */}
           <div className="flex flex-col gap-4 text-xs">
             <h3 className="font-heading font-bold text-sm text-tertiary-fixed border-b border-primary-container pb-2">
-              Saluran Informasi Publik
+              {footerSettings?.channelsTitle || 'Saluran Informasi Publik'}
             </h3>
             <p className="text-surface-container-high leading-relaxed">
-              Ikuti informasi terkini, agenda bimtek, dan edukasi seputar perlindungan komoditas perkebunan di Benua Etam.
+              Ikuti perkembangan kegiatan bimbingan teknis, gerakan pengendalian OPT, dan rilis publikasi berkala:
             </p>
-            <div className="flex items-center gap-2.5">
+
+            <div className="flex flex-col gap-2">
               <a
                 href="https://www.youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="YouTube Resmi P2TP"
-                className="w-9 h-9 rounded-full bg-primary-container hover:bg-secondary flex items-center justify-center text-on-primary transition-colors focus:ring-2 focus:ring-kaltim-gold"
+                className="flex items-center gap-2 p-2 rounded-lg bg-primary-container hover:bg-secondary text-surface-container-high hover:text-on-primary transition-colors"
               >
-                <Video className="w-4 h-4" />
+                <Video className="w-4 h-4 text-kaltim-gold" />
+                <span>YouTube Resmi UPTD P2TP</span>
+                <ExternalLink className="w-3 h-3 ml-auto opacity-70" />
               </a>
+
               <a
                 href="https://www.instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Instagram Resmi P2TP"
-                className="w-9 h-9 rounded-full bg-primary-container hover:bg-secondary flex items-center justify-center text-on-primary transition-colors focus:ring-2 focus:ring-kaltim-gold"
+                className="flex items-center gap-2 p-2 rounded-lg bg-primary-container hover:bg-secondary text-surface-container-high hover:text-on-primary transition-colors"
               >
-                <Camera className="w-4 h-4" />
+                <Camera className="w-4 h-4 text-kaltim-gold" />
+                <span>Instagram @uptdp2tp_kaltim</span>
+                <ExternalLink className="w-3 h-3 ml-auto opacity-70" />
               </a>
+
               <a
                 href="https://wa.me/"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="WhatsApp Hotline Petani"
-                className="w-9 h-9 rounded-full bg-kaltim-gold hover:bg-tertiary-fixed-dim text-on-tertiary-fixed flex items-center justify-center transition-colors focus:ring-2 focus:ring-secondary"
+                className="flex items-center gap-2 p-2 rounded-lg bg-primary-container hover:bg-secondary text-surface-container-high hover:text-on-primary transition-colors"
               >
-                <MessageCircle className="w-4 h-4" />
+                <MessageCircle className="w-4 h-4 text-kaltim-gold" />
+                <span>Konsultasi WhatsApp Lapangan</span>
+                <ExternalLink className="w-3 h-3 ml-auto opacity-70" />
               </a>
-            </div>
-
-            <div className="bg-primary-container p-3 rounded-lg border border-secondary mt-1">
-              <div className="font-heading font-bold text-tertiary-fixed text-xs flex items-center gap-1.5">
-                <MessageCircle className="w-4 h-4" />
-                <span>Helpdesk Petani Perkebunan</span>
-              </div>
-              <p className="text-[11px] text-surface-container-high mt-1">
-                Layanan konsultasi seputar agens hayati dan identifikasi gejala OPT secara ramah lingkungan.
-              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Copyright Baris Bawah */}
-      <div className="bg-on-tertiary-fixed text-surface-container-high py-4 px-4 sm:px-6 lg:px-8 text-center text-xs border-t border-primary-container">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>
-            © {currentYear} UPTD Pengembangan Perlindungan Tanaman Perkebunan — Pemerintah Provinsi Kalimantan Timur.
-          </span>
-          <div className="flex items-center gap-3">
-            <span className="text-outline">
-              Hak Cipta Dilindungi Undang-Undang Republik Indonesia.
-            </span>
-            <span className="text-outline">|</span>
-            <Link
-              to="/admin/login"
-              className="text-tertiary-fixed hover:text-white transition-colors underline font-medium"
-            >
-              Login Operator
+        {/* Bilah Hak Cipta & Keamanan Bawah */}
+        <div className="mt-12 pt-6 border-t border-primary-container flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-surface-container-high">
+          <div>
+            <p>
+              {footerSettings?.copyrightText ||
+                `© ${currentYear} UPTD Pengembangan Perlindungan Tanaman Perkebunan Provinsi Kalimantan Timur. Hak Cipta Dilindungi.`}
+            </p>
+            <p className="text-[11px] text-tertiary-fixed-dim mt-0.5">
+              Dinas Perkebunan Pemerintah Provinsi Kalimantan Timur • Samarinda
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 text-[11px]">
+            <Link to="/profil" className="hover:text-tertiary-fixed transition-colors">
+              Profil Instansi
+            </Link>
+            <span>•</span>
+            <Link to="/kontak" className="hover:text-tertiary-fixed transition-colors">
+              Kontak & Pengaduan
+            </Link>
+            <span>•</span>
+            <Link to="/admin/login" className="hover:text-tertiary-fixed transition-colors">
+              Panel Operator
             </Link>
           </div>
         </div>

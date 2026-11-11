@@ -21,15 +21,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = async (email: string, pass: string) => {
+  const login = async (usernameOrEmail: string, pass: string) => {
+    const input = usernameOrEmail.trim().toLowerCase();
     if (
-      (email === 'operator@p2tp.kaltimprov.go.id' ||
-        email === 'admin@p2tp.kaltimprov.go.id' ||
-        email === 'admin') &&
+      (input === 'operatorp2tp' ||
+        input === 'operatorp2tp@kaltimprov.go.id' ||
+        input === 'operator@p2tp.kaltimprov.go.id' ||
+        input === 'admin') &&
       pass === 'admin123'
     ) {
       const loggedUser: AdminUser = {
-        email,
+        email: 'operatorp2tp@kaltimprov.go.id',
         name: 'Operator Teknis P2TP',
         role: 'operator',
       };
@@ -38,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return {
       success: false,
-      error: 'Email atau kata sandi tidak cocok. Gunakan operator@p2tp.kaltimprov.go.id / admin123',
+      error: 'ID Operator atau kata sandi tidak cocok. Silakan periksa kembali.',
     };
   };
 

@@ -3,14 +3,19 @@ import { Link } from 'react-router-dom';
 import { Camera, ArrowRight } from 'lucide-react';
 import { Photo } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
+import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 import { formatDateWITA } from '../../utils/date';
 import { SampleBadge } from '../common/SampleBadge';
 
 export const GallerySection: React.FC = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [gallerySettings, setGallerySettings] = useState(defaultSiteSettings.gallerySection);
 
   useEffect(() => {
     contentRepository.listPhotos({ limit: 4 }).then(setPhotos);
+    contentRepository.getSiteSettings().then((s) => {
+      if (s?.gallerySection) setGallerySettings(s.gallerySection);
+    });
   }, []);
 
   return (
@@ -20,20 +25,21 @@ export const GallerySection: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-1.5 text-secondary font-heading text-xs uppercase tracking-wider font-bold mb-1">
               <Camera className="w-4 h-4" />
-              <span>Dokumentasi Tindakan Nyata</span>
+              <span>{gallerySettings.badge || 'Dokumentasi Tindakan Nyata'}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-heading font-bold text-primary">
-              Galeri Kegiatan Perlindungan
+              {gallerySettings.title || 'Galeri Kegiatan Perlindungan'}
             </h2>
             <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-xl">
-              Aktivitas pengawalan kesehatan tanaman perkebunan bersama petani dan penyuluh se-Kalimantan Timur.
+              {gallerySettings.subtitle ||
+                'Aktivitas pengawalan kesehatan tanaman perkebunan bersama petani dan penyuluh se-Kalimantan Timur.'}
             </p>
           </div>
           <Link
-            to="/galeri"
+            to={gallerySettings.ctaLink || '/galeri'}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-container-lowest hover:bg-secondary hover:text-on-secondary text-primary font-heading text-xs font-bold rounded-xl transition-all shadow-sm border border-border-subtle"
           >
-            <span>Lihat Semua Dokumentasi</span>
+            <span>{gallerySettings.ctaText || 'Lihat Semua Dokumentasi Foto'}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -60,16 +66,21 @@ export const GallerySection: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 flex flex-col gap-1 flex-1 justify-between">
+              <div className="p-4 flex flex-col gap-2 flex-1 justify-between">
                 <div>
-                  {item.takenAt && (
-                    <span className="text-[11px] text-text-muted">
-                      {formatDateWITA(item.takenAt)}
-                    </span>
-                  )}
-                  <h3 className="font-heading font-bold text-xs sm:text-sm text-primary line-clamp-2 group-hover:text-secondary transition-colors mt-0.5">
+                  <h3 className="font-heading font-bold text-sm text-on-surface line-clamp-2 group-hover:text-secondary transition-colors">
                     {item.title}
                   </h3>
+                  {item.description && (
+                    <p className="text-xs text-text-muted line-clamp-2 mt-1 leading-relaxed">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-border-subtle flex items-center justify-between text-[11px] text-text-muted">
+                  <span>{item.takenAt ? formatDateWITA(item.takenAt) : 'Kalimantan Timur'}</span>
+                  <span className="text-secondary font-semibold group-hover:underline">Detail</span>
                 </div>
               </div>
             </div>

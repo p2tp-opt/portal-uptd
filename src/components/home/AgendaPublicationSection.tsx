@@ -3,16 +3,21 @@ import { Link } from 'react-router-dom';
 import { CalendarDays, MapPin, FileText, Download, Calendar, ArrowRight } from 'lucide-react';
 import { Agenda, Publication } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
+import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 import { formatDayMonthWITA } from '../../utils/date';
 import { SampleBadge } from '../common/SampleBadge';
 
 export const AgendaPublicationSection: React.FC = () => {
   const [agendas, setAgendas] = useState<Agenda[]>([]);
   const [publications, setPublications] = useState<Publication[]>([]);
+  const [sectionSettings, setSectionSettings] = useState(defaultSiteSettings.agendaPubSection);
 
   useEffect(() => {
     contentRepository.listAgenda({ limit: 3 }).then(setAgendas);
     contentRepository.listPublications({ limit: 3 }).then(setPublications);
+    contentRepository.getSiteSettings().then((s) => {
+      if (s?.agendaPubSection) setSectionSettings(s.agendaPubSection);
+    });
   }, []);
 
   return (
@@ -24,8 +29,13 @@ export const AgendaPublicationSection: React.FC = () => {
             <span>Kalender & Dokumen Teknis</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-heading font-bold text-primary">
-            Agenda & Publikasi Teknis
+            {sectionSettings.title || 'Agenda & Publikasi Teknis'}
           </h2>
+          {sectionSettings.subtitle && (
+            <p className="text-xs text-text-muted mt-1">
+              {sectionSettings.subtitle}
+            </p>
+          )}
         </div>
       </div>
 
@@ -48,26 +58,23 @@ export const AgendaPublicationSection: React.FC = () => {
                   <Link
                     key={item.id}
                     to={`/agenda`}
-                    className="flex items-start gap-3.5 p-3 rounded-xl hover:bg-surface-container-low transition-colors group"
+                    className="flex items-start gap-4 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors group"
                   >
-                    {/* Badge Kotak Tanggal */}
-                    <div className="flex flex-col items-center justify-center w-12 h-12 bg-primary-container text-on-primary rounded-xl flex-shrink-0 group-hover:bg-secondary transition-colors">
-                      <span className="text-[10px] font-bold uppercase leading-none text-tertiary-fixed">
-                        {month}
-                      </span>
-                      <span className="text-base font-heading font-bold leading-none mt-1">
-                        {day}
-                      </span>
+                    <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex flex-col items-center justify-center font-heading flex-shrink-0 group-hover:bg-secondary transition-colors">
+                      <span className="text-base font-bold leading-none">{day}</span>
+                      <span className="text-[10px] uppercase font-semibold text-kaltim-gold">{month}</span>
                     </div>
 
                     <div className="flex flex-col min-w-0">
-                      <h4 className="font-heading font-bold text-xs sm:text-sm text-on-surface line-clamp-1 group-hover:text-secondary transition-colors">
+                      <span className="font-heading font-bold text-xs text-on-surface line-clamp-1 group-hover:text-secondary transition-colors">
                         {item.title}
-                      </h4>
-                      <div className="flex items-center gap-2 text-text-muted text-xs mt-1">
-                        <MapPin className="w-3.5 h-3.5 text-outline flex-shrink-0" />
-                        <span className="truncate">{item.location || 'Kalimantan Timur'}</span>
-                      </div>
+                      </span>
+                      {item.location && (
+                        <div className="flex items-center gap-1 text-[11px] text-text-muted mt-1 truncate">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{item.location}</span>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 );
@@ -77,46 +84,49 @@ export const AgendaPublicationSection: React.FC = () => {
 
           <div className="pt-4 mt-2 border-t border-border-subtle">
             <Link
-              to="/agenda"
+              to={sectionSettings.agendaCtaLink || '/agenda'}
               className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-surface-container-low hover:bg-surface-container text-secondary font-heading text-xs font-bold rounded-xl transition-colors"
             >
-              <span>Lihat Seluruh Kalender Agenda</span>
+              <span>{sectionSettings.agendaCtaText || 'Lihat Semua Agenda Kegiatan UPTD'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
 
-        {/* Panel Kanan: Regulasi & Dokumen Publikasi */}
+        {/* Panel Kanan: Publikasi & SOP */}
         <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-border-subtle flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-border-subtle">
               <h3 className="text-base font-heading font-bold text-primary flex items-center gap-2">
                 <FileText className="w-5 h-5 text-secondary" />
-                <span>Publikasi & Buku Saku</span>
+                <span>Publikasi & Dokumen SOP</span>
               </h3>
               <SampleBadge />
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               {publications.map((pub) => (
                 <div
                   key={pub.id}
-                  className="p-3.5 rounded-xl bg-surface-container-low flex items-center justify-between gap-3 group hover:bg-surface-container transition-colors"
+                  className="flex items-center justify-between gap-4 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors group"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-error font-bold flex-shrink-0 shadow-xs">
-                      <FileText className="w-5 h-5 text-error" />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-badge-opt-bg text-badge-opt-text flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <Link
                         to={`/publikasi`}
-                        className="font-heading font-bold text-xs sm:text-sm text-on-surface truncate group-hover:text-secondary transition-colors"
+                        className="font-heading font-bold text-xs text-on-surface truncate hover:text-secondary transition-colors"
                       >
                         {pub.title}
                       </Link>
-                      <span className="text-[11px] text-text-muted">
-                        {pub.fileType || 'PDF'} • {pub.fileSize || 'Dokumen'} • {pub.category}
-                      </span>
+                      <div className="flex items-center gap-2 text-[11px] text-text-muted mt-0.5">
+                        <span className="bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-secondary">
+                          {pub.fileType || 'PDF'}
+                        </span>
+                        <span>{pub.fileSize || 'Dokumen Teknis'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -134,10 +144,10 @@ export const AgendaPublicationSection: React.FC = () => {
 
           <div className="pt-4 mt-2 border-t border-border-subtle">
             <Link
-              to="/publikasi"
+              to={sectionSettings.pubCtaLink || '/publikasi'}
               className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-surface-container-low hover:bg-surface-container text-secondary font-heading text-xs font-bold rounded-xl transition-colors"
             >
-              <span>Lihat Direktori Publikasi & SOP Lengkap</span>
+              <span>{sectionSettings.pubCtaText || 'Unduh Publikasi & Dokumen SOP Lengkap'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
