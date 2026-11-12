@@ -59,7 +59,7 @@ export const AdminSiteCustomizerPage: React.FC = () => {
       title: 'Judul Slide Baru',
       subtitle: 'Subjudul atau Lokasi Pengamatan',
       description: 'Deskripsi singkat tindakan perlindungan tanaman perkebunan.',
-      imageUrl: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=80',
+      imageUrl: '/images/slides/slide-1.jpg',
     };
     setSettings({
       ...settings,

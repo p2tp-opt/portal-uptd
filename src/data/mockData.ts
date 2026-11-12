@@ -76,7 +76,7 @@ UPTD P2TP mengimbau seluruh kelompok tani untuk mengintensifkan sanitasi kebun, 
 
 Langkah preventif dini merupakan kunci utama dalam menjaga keberlanjutan produktivitas komoditas perkebunan masyarakat.`,
     category: 'Mitigasi Iklim',
-    coverImage: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
+    coverImage: '/images/slides/slide-2.jpg',
     publishedAt: '2026-02-17T08:15:00+08:00',
     author: 'Subbag Peramalan OPT',
     status: 'published',
@@ -233,7 +233,7 @@ export const mockVideos: Video[] = [
     title: 'Mengenal Predator Alami Hama: Sycanus dan Eocanthecona',
     description:
       'Karakteristik biologis serangga predator sahabat petani perkebunan yang memangsa ulat kantung dan ulat api.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
+    thumbnailUrl: '/images/slides/slide-3.jpg',
     videoUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
     publishedAt: '2026-02-05T09:00:00+08:00',
     category: 'Edukasi Ekologi',
