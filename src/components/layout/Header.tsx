@@ -2,17 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { CalendarDays, Megaphone, Phone, Clock } from 'lucide-react';
 import { getCurrentDateHeaderWITA } from '../../utils/date';
 import { Link } from 'react-router-dom';
-import { contentRepository } from '../../services/contentRepository';
-import { ProfileContact } from '../../types/content';
+import { useSiteContext } from '../../context/useSiteContext';
 
 export const Header: React.FC = () => {
   const currentDate = getCurrentDateHeaderWITA();
-  const [profile, setProfile] = useState<ProfileContact | null>(null);
+  const { profile, siteSettings } = useSiteContext();
   const [realtimeClock, setRealtimeClock] = useState<string>('');
-
-  useEffect(() => {
-    contentRepository.getProfile().then(setProfile);
-  }, []);
 
   // Realtime Clock berdetak setiap detik dengan zona waktu WITA (Asia/Makassar)
   useEffect(() => {
@@ -33,7 +28,7 @@ export const Header: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const headerSettings = profile?.siteSettings?.header;
+  const headerSettings = siteSettings?.header;
 
   return (
     <header className="w-full shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40">

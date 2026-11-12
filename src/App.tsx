@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthProvider';
+import { SiteProvider } from './context/SiteProvider';
 import { Layout } from './components/layout/Layout';
 import { AdminGuard } from './components/admin/AdminGuard';
 import { AdminLayout } from './components/admin/AdminLayout';
@@ -29,8 +30,9 @@ import { AdminSiteCustomizerPage } from './pages/admin/AdminSiteCustomizerPage';
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Routes>
+    <SiteProvider>
+      <AuthProvider>
+        <Routes>
         {/* Rute Publik Website */}
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -69,6 +71,7 @@ export const App: React.FC = () => {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>
+    </SiteProvider>
   );
 };
 

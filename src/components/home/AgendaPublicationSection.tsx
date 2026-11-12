@@ -3,21 +3,20 @@ import { Link } from 'react-router-dom';
 import { CalendarDays, MapPin, FileText, Download, Calendar, ArrowRight } from 'lucide-react';
 import { Agenda, Publication } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 import { formatDayMonthWITA } from '../../utils/date';
 import { SampleBadge } from '../common/SampleBadge';
 
 export const AgendaPublicationSection: React.FC = () => {
+  const { siteSettings } = useSiteContext();
+  const sectionSettings = siteSettings.agendaPubSection || defaultSiteSettings.agendaPubSection;
   const [agendas, setAgendas] = useState<Agenda[]>([]);
   const [publications, setPublications] = useState<Publication[]>([]);
-  const [sectionSettings, setSectionSettings] = useState(defaultSiteSettings.agendaPubSection);
 
   useEffect(() => {
     contentRepository.listAgenda({ limit: 3 }).then(setAgendas);
     contentRepository.listPublications({ limit: 3 }).then(setPublications);
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.agendaPubSection) setSectionSettings(s.agendaPubSection);
-    });
   }, []);
 
   return (

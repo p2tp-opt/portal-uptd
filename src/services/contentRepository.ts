@@ -34,6 +34,8 @@ export interface ContentRepository {
   listVideos(opts?: ListOptions): Promise<Video[]>;
   getProfile(): Promise<ProfileContact>;
   getSiteSettings(): Promise<SiteSettings>;
+  getProfileSync(): ProfileContact;
+  getSiteSettingsSync(): SiteSettings;
 
   // CRUD Berita
   createNews(item: Omit<News, 'id' | 'slug'>): Promise<News>;
@@ -308,10 +310,18 @@ export class LocalStorageContentRepository implements ContentRepository {
     return list.length < initialLen;
   }
 
-  async getProfile(): Promise<ProfileContact> {
+  getProfileSync(): ProfileContact {
     const profile = this.getStorage<ProfileContact>(STORAGE_KEYS.PROFILE, mockProfile);
-    const settings = await this.getSiteSettings();
+    const settings = this.getSiteSettingsSync();
     return { ...profile, siteSettings: settings };
+  }
+
+  getSiteSettingsSync(): SiteSettings {
+    return this.getStorage<SiteSettings>(STORAGE_KEYS.SITE_SETTINGS, defaultSiteSettings);
+  }
+
+  async getProfile(): Promise<ProfileContact> {
+    return this.getProfileSync();
   }
 
   async updateProfile(profile: Partial<ProfileContact>): Promise<ProfileContact> {
@@ -987,6 +997,14 @@ export class SupabaseContentRepository implements ContentRepository {
 
     await this.updateProfile({ siteSettings: updatedSettings });
     return updatedSettings;
+  }
+
+  getProfileSync(): ProfileContact {
+    return this.fallback.getProfileSync();
+  }
+
+  getSiteSettingsSync(): SiteSettings {
+    return this.fallback.getSiteSettingsSync();
   }
 
   async resetToSampleData(): Promise<void> {

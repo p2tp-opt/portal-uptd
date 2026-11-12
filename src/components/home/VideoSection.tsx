@@ -2,20 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Play, PlayCircle, ExternalLink, X } from 'lucide-react';
 import { Video } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 import { formatDateWITA } from '../../utils/date';
 import { SampleBadge } from '../common/SampleBadge';
 
 export const VideoSection: React.FC = () => {
+  const { siteSettings } = useSiteContext();
+  const videoSettings = siteSettings.videoSection || defaultSiteSettings.videoSection;
   const [videos, setVideos] = useState<Video[]>([]);
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
-  const [videoSettings, setVideoSettings] = useState(defaultSiteSettings.videoSection);
 
   useEffect(() => {
     contentRepository.listVideos({ limit: 4 }).then(setVideos);
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.videoSection) setVideoSettings(s.videoSection);
-    });
   }, []);
 
   const featured = videos[0];

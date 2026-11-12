@@ -3,19 +3,18 @@ import { Link } from 'react-router-dom';
 import { Camera, ArrowRight } from 'lucide-react';
 import { Photo } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 import { formatDateWITA } from '../../utils/date';
 import { SampleBadge } from '../common/SampleBadge';
 
 export const GallerySection: React.FC = () => {
+  const { siteSettings } = useSiteContext();
+  const gallerySettings = siteSettings.gallerySection || defaultSiteSettings.gallerySection;
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [gallerySettings, setGallerySettings] = useState(defaultSiteSettings.gallerySection);
 
   useEffect(() => {
     contentRepository.listPhotos({ limit: 4 }).then(setPhotos);
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.gallerySection) setGallerySettings(s.gallerySection);
-    });
   }, []);
 
   return (

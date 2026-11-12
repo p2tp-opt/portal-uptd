@@ -1,18 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Quote, User } from 'lucide-react';
-import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 
 export const WelcomeSection: React.FC = () => {
-  const [welcome, setWelcome] = useState(defaultSiteSettings.welcome);
-
-  useEffect(() => {
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.welcome) {
-        setWelcome(s.welcome);
-      }
-    });
-  }, []);
+  const { siteSettings } = useSiteContext();
+  const welcome = siteSettings.welcome || defaultSiteSettings.welcome;
 
   return (
     <section className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 shadow-sm border border-border-subtle flex flex-col sm:flex-row gap-6 items-center sm:items-start relative overflow-hidden">

@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Map, AlertTriangle, Sprout } from 'lucide-react';
-import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 
 export const QuickStats: React.FC = () => {
-  const [stats, setStats] = useState(defaultSiteSettings.hero.stats);
-
-  useEffect(() => {
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.hero?.stats && s.hero.stats.length === 3) {
-        setStats(s.hero.stats);
-      }
-    });
-  }, []);
+  const { siteSettings } = useSiteContext();
+  const stats = siteSettings.hero?.stats && siteSettings.hero.stats.length === 3
+    ? siteSettings.hero.stats
+    : defaultSiteSettings.hero.stats;
 
   const icons = [
     <Map className="w-6 h-6" key="0" />,

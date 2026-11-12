@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search, ShieldAlert } from 'lucide-react';
-import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 
 interface NavItem {
   label: string;
@@ -20,22 +20,16 @@ const navItems: NavItem[] = [
 ];
 
 export const Navbar: React.FC = () => {
+  const { siteSettings } = useSiteContext();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [ctaText, setCtaText] = useState('Info Siaga OPT');
-  const [ctaLink, setCtaLink] = useState('/kontak');
+  const ctaText = siteSettings.navbar?.ctaText || 'Info Siaga OPT';
+  const ctaLink = siteSettings.navbar?.ctaLink || '/kontak';
 
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.navbar?.ctaText) setCtaText(s.navbar.ctaText);
-      if (s?.navbar?.ctaLink) setCtaLink(s.navbar.ctaLink);
-    });
-  }, []);
 
   // Tutup drawer saat rute berpindah
   useEffect(() => {

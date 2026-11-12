@@ -1,18 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, ChevronRight, ExternalLink, ShieldCheck, Video, Camera, MessageCircle } from 'lucide-react';
-import { contentRepository } from '../../services/contentRepository';
-import { ProfileContact } from '../../types/content';
+import { useSiteContext } from '../../context/useSiteContext';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const [profile, setProfile] = useState<ProfileContact | null>(null);
-
-  useEffect(() => {
-    contentRepository.getProfile().then(setProfile);
-  }, []);
-
-  const footerSettings = profile?.siteSettings?.footer;
+  const { profile, siteSettings } = useSiteContext();
+  const footerSettings = siteSettings.footer;
 
   return (
     <footer className="w-full bg-primary text-on-primary">

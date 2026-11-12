@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Bell, BookOpen, Phone, MessageSquare, Clock, ShieldAlert } from 'lucide-react';
-import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
 
 export const Sidebar: React.FC = () => {
-  const [sidebarSettings, setSidebarSettings] = useState(defaultSiteSettings.sidebar);
-
-  useEffect(() => {
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.sidebar) {
-        setSidebarSettings(s.sidebar);
-      }
-    });
-  }, []);
+  const { siteSettings } = useSiteContext();
+  const sidebarSettings = siteSettings.sidebar || defaultSiteSettings.sidebar;
 
   return (
     <aside aria-label="Sidebar Informasi Pelayanan" className="flex flex-col gap-6">

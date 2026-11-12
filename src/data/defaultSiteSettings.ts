@@ -3,7 +3,7 @@ import { SiteSettings } from '../types/siteSettings';
 
 export const defaultSiteSettings: SiteSettings = {
   header: {
-    topNotice: 'Portal Resmi Informasi Perlindungan Tanaman Perkebunan Kaltim',
+    topNotice: 'Portal Resmi Informasi UPTD Pengembangan Perlindungan Tanaman Perkebunan Kaltim',
     hotlineTag: 'Siaga Pengamatan OPT',
     tickerText: 'Kesiapsiagaan Dampak Cuaca Ekstrem terhadap Kesehatan Tanaman Perkebunan Rakyat Benua Etam',
     tickerLink: '/berita',
@@ -27,39 +27,35 @@ export const defaultSiteSettings: SiteSettings = {
     slides: [
       {
         id: 1,
-        title: 'Pengamatan & Pengendalian Hama Terpadu',
-        subtitle: 'Monitoring Rutin Kelapa Sawit, Karet & Kakao di Seluruh Wilayah',
+        title: 'Kantor UPTD P2TP',
+        subtitle: 'Kantor Pelayanan Pengendalian',
         description:
           'Pendekatan ramah lingkungan berbasis kearifan ekologi dan pelestarian musuh alami untuk menjaga produktivitas kebun masyarakat.',
-        imageUrl:
-          'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=80',
+        imageUrl: '/images/slides/slide-1.jpg',
       },
       {
         id: 2,
-        title: 'Agens Pengendali Hayati Ramah Lingkungan',
-        subtitle: 'Laboratorium APH UPTD P2TP Samarinda',
+        title: 'Pengendalian Bercak Daun Kelapa Sawit',
+        subtitle: 'Serangan Alga pada tanaman kelapa sawit',
         description:
           'Isolasi, perbanyakan, dan distribusi Trichoderma sp., Beauveria bassiana, dan Metarhizium anisopliae untuk pekebun mandiri.',
-        imageUrl:
-          'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=1600&q=80',
+        imageUrl: '/images/slides/slide-2.jpg',
       },
       {
         id: 3,
-        title: 'Bimbingan Teknis & Penguatan Kelompok Tani',
+        title: 'Sapras Pengendalian',
         subtitle: 'Pendampingan Teknis Langsung Bersama Petani Lapangan',
         description:
           'Peningkatan kapasitas pekebun dalam identifikasi dini gejala penyakit perakaran dan aplikasi pestisida nabati.',
-        imageUrl:
-          'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=1600&q=80',
+        imageUrl: '/images/slides/slide-3.jpg',
       },
       {
         id: 4,
-        title: 'Mitigasi Cuaca & Peringatan Dini Serangan OPT',
+        title: 'Demplot APH',
         subtitle: 'Sistem Informasi Pemantauan Iklim Perkebunan',
         description:
           'Kesiapsiagaan menghadapi kelembaban tinggi guna mencegah ledakan jamur akar dan penyakit busuk pupus.',
-        imageUrl:
-          'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=1600&q=80',
+        imageUrl: '/images/slides/slide-4.jpg',
       },
     ],
     stats: [
@@ -83,9 +79,9 @@ export const defaultSiteSettings: SiteSettings = {
   welcome: {
     badge: 'Komitmen Pelayanan Publik',
     title: 'Menjaga Produktivitas & Kelestarian Perkebunan Bumi Etam',
-    leaderName: 'Mahreni Kalsi, S.P., M.P.',
+    leaderName: 'Mahmud Kahfi, S.P., M.P.',
     leaderTitle: 'Kepala UPTD Pengembangan Perlindungan Tanaman Perkebunan',
-    leaderPhoto: '',
+    leaderPhoto: '/images/leader-mahmud-kahfi.png',
     speechContent:
       'Melalui prinsip Profesional, Amanah dan Peduli, UPTD P2TP Dinas Perkebunan Provinsi Kalimantan Timur berdiri teguh di garda terdepan melindungi komoditas unggulan daerah — Kelapa Sawit, Karet, Kakao, Lada, dan Kelapa Dalam — dari ancaman hama dan penyakit. Kami mengedepankan pendekatan Pengendalian Hama Terpadu (PHT) yang berbasis biologi dan kelestarian ekosistem.',
   },
@@ -97,7 +93,7 @@ export const defaultSiteSettings: SiteSettings = {
     alertLevel: 'SIAGA II (PENGAMATAN INTENSIF)',
     alertCtaText: 'Informasi Kontak Petugas Wilayah',
     alertCtaLink: '/kontak',
-    hotlinePhone: '(0541) 273580 / (0541) 743488',
+    hotlinePhone: '(0541) 273580 ',
     hotlineHoursWeekday: '08.00 - 16.00 WITA',
     hotlineHoursFriday: '08.00 - 11.00 WITA',
   },
@@ -126,7 +122,7 @@ export const defaultSiteSettings: SiteSettings = {
   footer: {
     description:
       'Unit Pelaksana Teknis Daerah Pengembangan Perlindungan Tanaman Perkebunan pada Dinas Perkebunan Provinsi Kalimantan Timur mengawal ketahanan dan perlindungan komoditas strategis perkebunan di Benua Etam.',
-    copyrightText: 'Hak Cipta Dilindungi. Pemerintah Provinsi Kalimantan Timur.',
+    copyrightText: 'Hak Cipta Dilindungi. UPTD P2TP Pemerintah Provinsi Kalimantan Timur.',
     quickLinksTitle: 'Tautan Cepat & Layanan',
     channelsTitle: 'Saluran Informasi Publik',
   },

@@ -1,16 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 import { MapPin, Phone, Mail, Clock, MessageSquare, AlertCircle, ShieldAlert } from 'lucide-react';
-import { ProfileContact } from '../types/content';
-import { contentRepository } from '../services/contentRepository';
-import { SampleBadge } from '../components/common/SampleBadge';
+import { useSiteContext } from '../context/useSiteContext';
 
 export const ContactPage: React.FC = () => {
-  const [profile, setProfile] = useState<ProfileContact | null>(null);
-
-  useEffect(() => {
-    contentRepository.getProfile().then(setProfile);
-  }, []);
+  const { profile } = useSiteContext();
 
   return (
     <div className="flex flex-col w-full pb-16">
@@ -21,7 +15,7 @@ export const ContactPage: React.FC = () => {
             <span className="text-secondary font-heading text-xs uppercase tracking-wider font-bold">
               Pusat Pelayanan & Pengaduan
             </span>
-            <SampleBadge label="Menunggu Data Resmi" />
+            {!profile?.verified && <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gold-light text-tertiary-container border border-kaltim-gold/40">Menunggu Data Resmi</span>}
           </div>
           <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-primary">
             Alamat & Kontak Resmi UPTD P2TP

@@ -4,26 +4,26 @@
 // Gunakan selalu ContentRepository dari src/services/contentRepository.ts
 
 import { News, Agenda, Publication, Photo, Video, ProfileContact } from '../types/content';
+import { defaultSiteSettings } from './defaultSiteSettings';
 
-// PLACEHOLDER — Data profil resmi menunggu konfirmasi instansi
+// Data profil resmi UPTD P2TP
 export const mockProfile: ProfileContact = {
   institutionName: 'UPTD Pengembangan Perlindungan Tanaman Perkebunan (P2TP)',
   motto: 'Profesional, Amanah dan Peduli',
   description:
     'Unit Pelaksana Teknis Daerah Pengembangan Perlindungan Tanaman Perkebunan pada Dinas Perkebunan Provinsi Kalimantan Timur bertugas mengawal kesehatan, kelestarian, dan ketahanan tanaman komoditas strategis perkebunan di Benua Etam.',
-  logoUrl: '', // Bisa diunggah atau diisi URL logo melalui menu CMS Pengaturan Profil
-  // Alamat resmi
+  logoUrl: '/images/logo-uptd.png',
   address: 'Jl. Slamet Riyadi, Kel. Karang Asam Ilir, Kec. Sungai Kunjang, Samarinda, Kalimantan Timur',
-  // Nomor telepon resmi yang diminta
-  phone: '(0541) 273580 / (0541) 743488',
-  email: 'uptd.p2tp@kaltimprov.go.id',
+  phone: '(0541) 273580 ',
+  email: 'p2tp.buntim@gmail.com',
   officeHours: 'Senin - Kamis: 08.00 - 16.00 WITA | Jumat: 08.00 - 11.00 WITA',
   socialLinks: [
     { platform: 'youtube', url: 'https://www.youtube.com', label: 'YouTube Resmi P2TP' },
     { platform: 'instagram', url: 'https://www.instagram.com', label: 'Instagram Resmi P2TP' },
     { platform: 'whatsapp', url: 'https://wa.me/', label: 'Konsultasi WhatsApp Lapangan' },
   ],
-  verified: false,
+  siteSettings: defaultSiteSettings,
+  verified: true,
 };
 
 // PLACEHOLDER — Berita & Artikel Terkini (Contoh)

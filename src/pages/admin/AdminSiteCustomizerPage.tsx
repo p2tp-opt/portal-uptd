@@ -18,15 +18,15 @@ import {
 } from 'lucide-react';
 import { SiteSettings, SlideItem } from '../../types/siteSettings';
 import { contentRepository } from '../../services/contentRepository';
-import { defaultSiteSettings } from '../../data/defaultSiteSettings';
+import { useSiteContext } from '../../context/useSiteContext';
 import { processImageFile } from '../../utils/fileUpload';
 
 export const AdminSiteCustomizerPage: React.FC = () => {
-  const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
+  const { siteSettings, updateSiteSettings } = useSiteContext();
+  const [settings, setSettings] = useState<SiteSettings>(siteSettings);
   const [activeTab, setActiveTab] = useState<
     'header-navbar' | 'hero' | 'content' | 'sidebar' | 'agenda-pub' | 'media' | 'footer'
   >('hero');
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const leaderPhotoInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +34,6 @@ export const AdminSiteCustomizerPage: React.FC = () => {
   useEffect(() => {
     contentRepository.getSiteSettings().then((data) => {
       setSettings(data);
-      setLoading(false);
     });
   }, []);
 
@@ -42,7 +41,7 @@ export const AdminSiteCustomizerPage: React.FC = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const updated = await contentRepository.updateSiteSettings(settings);
+      const updated = await updateSiteSettings(settings);
       setSettings(updated);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
@@ -112,15 +111,6 @@ export const AdminSiteCustomizerPage: React.FC = () => {
       }
     }
   };
-
-  if (loading) {
-    return (
-      <div className="p-12 text-center text-xs text-text-muted flex flex-col items-center gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-secondary" />
-        <span>Memuat konfigurasi tampilan dan konten website dari Supabase Cloud...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-12">

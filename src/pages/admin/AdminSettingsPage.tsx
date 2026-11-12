@@ -3,17 +3,17 @@ import { Link } from 'react-router-dom';
 import { Save, CheckCircle, ShieldCheck, Upload, Trash2, Phone, MapPin, Mail, Clock, Image, Sliders } from 'lucide-react';
 import { ProfileContact } from '../../types/content';
 import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 
 export const AdminSettingsPage: React.FC = () => {
-  const [profile, setProfile] = useState<ProfileContact | null>(null);
+  const { profile: contextProfile, updateProfile } = useSiteContext();
+  const [profile, setProfile] = useState<ProfileContact>(contextProfile);
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     contentRepository.getProfile().then((data) => {
       setProfile(data);
-      setLoading(false);
     });
   }, []);
 
@@ -45,12 +45,12 @@ export const AdminSettingsPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
-    await contentRepository.updateProfile(profile);
+    await updateProfile(profile);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
-  if (loading || !profile) {
+  if (!profile) {
     return <div className="p-8 text-center text-xs text-text-muted">Memuat pengaturan profil...</div>;
   }
 

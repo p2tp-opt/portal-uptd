@@ -1,22 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Play, Pause, ShieldCheck, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { contentRepository } from '../../services/contentRepository';
+import { useSiteContext } from '../../context/useSiteContext';
 import { defaultSiteSettings } from '../../data/defaultSiteSettings';
-import { SiteSettings } from '../../types/siteSettings';
 
 export const HeroSlider: React.FC = () => {
-  const [heroSettings, setHeroSettings] = useState<SiteSettings['hero']>(defaultSiteSettings.hero);
+  const { siteSettings } = useSiteContext();
+  const heroSettings = siteSettings.hero || defaultSiteSettings.hero;
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-
-  useEffect(() => {
-    contentRepository.getSiteSettings().then((s) => {
-      if (s?.hero) {
-        setHeroSettings(s.hero);
-      }
-    });
-  }, []);
 
   const slides = heroSettings.slides && heroSettings.slides.length > 0
     ? heroSettings.slides

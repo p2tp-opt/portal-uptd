@@ -1,7 +1,6 @@
 import React from 'react';
 import { Breadcrumb } from '../components/common/Breadcrumb';
 import { ShieldCheck, Target, Award, Users, CheckCircle } from 'lucide-react';
-import { SampleBadge } from '../components/common/SampleBadge';
 
 export const ProfilePage: React.FC = () => {
   return (
@@ -13,7 +12,6 @@ export const ProfilePage: React.FC = () => {
             <span className="text-secondary font-heading text-xs uppercase tracking-wider font-bold">
               Profil Kelembagaan
             </span>
-            <SampleBadge />
           </div>
           <h1 className="text-3xl sm:text-4xl font-heading font-extrabold text-primary">
             UPTD Pengembangan Perlindungan Tanaman Perkebunan
@@ -90,7 +88,7 @@ export const ProfilePage: React.FC = () => {
               <Users className="w-5 h-5 text-secondary" />
               <h2>Struktur Organisasi</h2>
             </div>
-            <SampleBadge label="Menunggu Data Resmi" />
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gold-light text-tertiary-container border border-kaltim-gold/40">Menunggu Data Resmi</span>
           </div>
 
           <p className="text-xs sm:text-sm text-text-muted">
