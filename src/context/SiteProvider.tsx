@@ -1,7 +1,9 @@
 // src/context/SiteProvider.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { ProfileContact, SiteSettings } from '../types/content';
+import { ProfileContact, SiteSettings, ServiceItem, ProfileDetail } from '../types/content';
 import { contentRepository } from '../services/contentRepository';
+import { defaultServices } from '../data/defaultServices';
+import { defaultProfileDetail } from '../data/defaultProfileDetail';
 import { SiteContext } from './site-context';
 
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -10,6 +12,14 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
     const p = contentRepository.getProfileSync();
     return p.siteSettings || contentRepository.getSiteSettingsSync();
+  });
+  const [services, setServices] = useState<ServiceItem[]>(() => {
+    const p = contentRepository.getProfileSync();
+    return p.services && p.services.length > 0 ? p.services : defaultServices;
+  });
+  const [profileDetail, setProfileDetail] = useState<ProfileDetail>(() => {
+    const p = contentRepository.getProfileSync();
+    return p.profileDetail || defaultProfileDetail;
   });
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +30,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(freshProfile);
       if (freshProfile.siteSettings) {
         setSiteSettings(freshProfile.siteSettings);
+      }
+      if (freshProfile.services && freshProfile.services.length > 0) {
+        setServices(freshProfile.services);
+      }
+      if (freshProfile.profileDetail) {
+        setProfileDetail(freshProfile.profileDetail);
       }
     } catch (e) {
       console.warn('Gagal sinkronisasi data dari Supabase Cloud di latar belakang:', e);
@@ -39,6 +55,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (freshProfile.siteSettings) {
           setSiteSettings(freshProfile.siteSettings);
         }
+        if (freshProfile.services) {
+          setServices(freshProfile.services);
+        }
+        if (freshProfile.profileDetail) {
+          setProfileDetail(freshProfile.profileDetail);
+        }
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -52,6 +74,12 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(saved);
       if (saved.siteSettings) {
         setSiteSettings(saved.siteSettings);
+      }
+      if (saved.services) {
+        setServices(saved.services);
+      }
+      if (saved.profileDetail) {
+        setProfileDetail(saved.profileDetail);
       }
       return saved;
     } finally {
@@ -71,14 +99,42 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const updateServices = useCallback(async (newServices: ServiceItem[]) => {
+    setLoading(true);
+    try {
+      const saved = await contentRepository.updateServices(newServices);
+      setServices(saved);
+      setProfile((prev) => ({ ...prev, services: saved }));
+      return saved;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateProfileDetail = useCallback(async (detailUpdates: Partial<ProfileDetail>) => {
+    setLoading(true);
+    try {
+      const saved = await contentRepository.updateProfileDetail(detailUpdates);
+      setProfileDetail(saved);
+      setProfile((prev) => ({ ...prev, profileDetail: saved }));
+      return saved;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return (
     <SiteContext.Provider
       value={{
         profile,
         siteSettings,
+        services,
+        profileDetail,
         loading,
         updateProfile,
         updateSiteSettings,
+        updateServices,
+        updateProfileDetail,
         refreshSiteData,
       }}
     >

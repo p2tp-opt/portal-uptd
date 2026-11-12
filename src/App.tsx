@@ -21,6 +21,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 // Halaman Admin / CMS Operator
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminServicesPage } from './pages/admin/AdminServicesPage';
 import { AdminNewsPage } from './pages/admin/AdminNewsPage';
 import { AdminAgendaPage } from './pages/admin/AdminAgendaPage';
 import { AdminPublicationPage } from './pages/admin/AdminPublicationPage';
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
         >
           <Route index element={<AdminDashboardPage />} />
           <Route path="tampilan" element={<AdminSiteCustomizerPage />} />
+          <Route path="layanan" element={<AdminServicesPage />} />
           <Route path="berita" element={<AdminNewsPage />} />
           <Route path="agenda" element={<AdminAgendaPage />} />
           <Route path="publikasi" element={<AdminPublicationPage />} />

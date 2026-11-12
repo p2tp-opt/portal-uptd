@@ -5,6 +5,8 @@
 
 import { News, Agenda, Publication, Photo, Video, ProfileContact } from '../types/content';
 import { defaultSiteSettings } from './defaultSiteSettings';
+import { defaultServices } from './defaultServices';
+import { defaultProfileDetail } from './defaultProfileDetail';
 
 // Data profil resmi UPTD P2TP
 export const mockProfile: ProfileContact = {
@@ -23,6 +25,8 @@ export const mockProfile: ProfileContact = {
     { platform: 'whatsapp', url: 'https://wa.me/', label: 'Konsultasi WhatsApp Lapangan' },
   ],
   siteSettings: defaultSiteSettings,
+  profileDetail: defaultProfileDetail,
+  services: defaultServices,
   verified: true,
 };
 

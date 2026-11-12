@@ -81,6 +81,36 @@ export interface SocialLink {
   label: string;
 }
 
+export interface ServiceItem {
+  id: string;
+  title: string;
+  tag: string;
+  description: string;
+  icon: string; // 'radio' | 'flask' | 'stethoscope' | 'sprout' | 'shield' | 'bug' | 'check' | 'award'
+  pointsTitle: string;
+  points: string[];
+}
+
+export interface OrgMember {
+  id: string;
+  role: string;
+  name: string;
+  section: string;
+}
+
+export interface ProfileDetail {
+  aboutTitle: string;
+  aboutParagraphs: string[];
+  vision?: string;
+  missions?: string[];
+  dutiesTitle: string;
+  duties: string[];
+  structureTitle: string;
+  structureDescription: string;
+  structureImageUrl?: string;
+  organizationMembers: OrgMember[];
+}
+
 export interface ProfileContact {
   institutionName: string;
   motto: string;
@@ -92,6 +122,8 @@ export interface ProfileContact {
   officeHours?: string;
   socialLinks: SocialLink[];
   siteSettings?: SiteSettings;
+  profileDetail?: ProfileDetail;
+  services?: ServiceItem[];
   verified: boolean;        // false selama masih data placeholder
 }
 

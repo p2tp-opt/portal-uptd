@@ -11,6 +11,8 @@ import {
   ProfileContact,
   ListOptions,
   SiteSettings,
+  ServiceItem,
+  ProfileDetail,
 } from '../types/content';
 import {
   mockNews,
@@ -21,6 +23,8 @@ import {
   mockProfile,
 } from '../data/mockData';
 import { defaultSiteSettings } from '../data/defaultSiteSettings';
+import { defaultServices } from '../data/defaultServices';
+import { defaultProfileDetail } from '../data/defaultProfileDetail';
 import { supabase } from './supabaseClient';
 
 export interface ContentRepository {
@@ -36,6 +40,10 @@ export interface ContentRepository {
   getSiteSettings(): Promise<SiteSettings>;
   getProfileSync(): ProfileContact;
   getSiteSettingsSync(): SiteSettings;
+  getServices(): Promise<ServiceItem[]>;
+  updateServices(services: ServiceItem[]): Promise<ServiceItem[]>;
+  getProfileDetail(): Promise<ProfileDetail>;
+  updateProfileDetail(detail: Partial<ProfileDetail>): Promise<ProfileDetail>;
 
   // CRUD Berita
   createNews(item: Omit<News, 'id' | 'slug'>): Promise<News>;
@@ -313,7 +321,12 @@ export class LocalStorageContentRepository implements ContentRepository {
   getProfileSync(): ProfileContact {
     const profile = this.getStorage<ProfileContact>(STORAGE_KEYS.PROFILE, mockProfile);
     const settings = this.getSiteSettingsSync();
-    return { ...profile, siteSettings: settings };
+    return {
+      ...profile,
+      siteSettings: settings,
+      profileDetail: profile.profileDetail || defaultProfileDetail,
+      services: profile.services && profile.services.length > 0 ? profile.services : defaultServices,
+    };
   }
 
   getSiteSettingsSync(): SiteSettings {
@@ -324,12 +337,36 @@ export class LocalStorageContentRepository implements ContentRepository {
     return this.getProfileSync();
   }
 
+  async getServices(): Promise<ServiceItem[]> {
+    const profile = await this.getProfile();
+    return profile.services && profile.services.length > 0 ? profile.services : defaultServices;
+  }
+
+  async updateServices(services: ServiceItem[]): Promise<ServiceItem[]> {
+    await this.updateProfile({ services });
+    return services;
+  }
+
+  async getProfileDetail(): Promise<ProfileDetail> {
+    const profile = await this.getProfile();
+    return profile.profileDetail || defaultProfileDetail;
+  }
+
+  async updateProfileDetail(detail: Partial<ProfileDetail>): Promise<ProfileDetail> {
+    const current = await this.getProfileDetail();
+    const updated: ProfileDetail = { ...current, ...detail };
+    await this.updateProfile({ profileDetail: updated });
+    return updated;
+  }
+
   async updateProfile(profile: Partial<ProfileContact>): Promise<ProfileContact> {
     const current = await this.getProfile();
     const updated: ProfileContact = {
       ...current,
       ...profile,
       siteSettings: profile.siteSettings || current.siteSettings || defaultSiteSettings,
+      profileDetail: profile.profileDetail || current.profileDetail || defaultProfileDetail,
+      services: profile.services || current.services || defaultServices,
     };
     this.setStorage(STORAGE_KEYS.PROFILE, updated);
     if (profile.siteSettings) {
@@ -883,6 +920,8 @@ export class SupabaseContentRepository implements ContentRepository {
 
       let socialLinks = [];
       let siteSettings = defaultSiteSettings;
+      let profileDetail = defaultProfileDetail;
+      let services = defaultServices;
 
       if (Array.isArray(data.social_links)) {
         socialLinks = data.social_links;
@@ -901,6 +940,15 @@ export class SupabaseContentRepository implements ContentRepository {
             footer: { ...defaultSiteSettings.footer, ...(data.social_links.siteSettings.footer || {}) },
           };
         }
+        if (data.social_links.profileDetail) {
+          profileDetail = {
+            ...defaultProfileDetail,
+            ...data.social_links.profileDetail,
+          };
+        }
+        if (Array.isArray(data.social_links.services) && data.social_links.services.length > 0) {
+          services = data.social_links.services;
+        }
       }
 
       const resProfile: ProfileContact = {
@@ -914,6 +962,8 @@ export class SupabaseContentRepository implements ContentRepository {
         officeHours: data.office_hours,
         socialLinks,
         siteSettings,
+        profileDetail,
+        services,
         verified: data.verified,
       };
 
@@ -940,6 +990,8 @@ export class SupabaseContentRepository implements ContentRepository {
         officeHours: profile.officeHours ?? current.officeHours,
         socialLinks: profile.socialLinks ?? current.socialLinks,
         siteSettings: profile.siteSettings ?? current.siteSettings ?? defaultSiteSettings,
+        profileDetail: profile.profileDetail ?? current.profileDetail ?? defaultProfileDetail,
+        services: profile.services ?? current.services ?? defaultServices,
         verified: profile.verified ?? current.verified,
       };
 
@@ -956,6 +1008,8 @@ export class SupabaseContentRepository implements ContentRepository {
         social_links: {
           links: updatedProfile.socialLinks,
           siteSettings: updatedProfile.siteSettings,
+          profileDetail: updatedProfile.profileDetail,
+          services: updatedProfile.services,
         },
         verified: updatedProfile.verified,
       };
@@ -1005,6 +1059,28 @@ export class SupabaseContentRepository implements ContentRepository {
 
   getSiteSettingsSync(): SiteSettings {
     return this.fallback.getSiteSettingsSync();
+  }
+
+  async getServices(): Promise<ServiceItem[]> {
+    const profile = await this.getProfile();
+    return profile.services && profile.services.length > 0 ? profile.services : defaultServices;
+  }
+
+  async updateServices(services: ServiceItem[]): Promise<ServiceItem[]> {
+    await this.updateProfile({ services });
+    return services;
+  }
+
+  async getProfileDetail(): Promise<ProfileDetail> {
+    const profile = await this.getProfile();
+    return profile.profileDetail || defaultProfileDetail;
+  }
+
+  async updateProfileDetail(detail: Partial<ProfileDetail>): Promise<ProfileDetail> {
+    const current = await this.getProfileDetail();
+    const updated: ProfileDetail = { ...current, ...detail };
+    await this.updateProfile({ profileDetail: updated });
+    return updated;
   }
 
   async resetToSampleData(): Promise<void> {

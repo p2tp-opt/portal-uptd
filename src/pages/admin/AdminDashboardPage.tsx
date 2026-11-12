@@ -12,12 +12,14 @@ import {
   AlertTriangle,
   Sliders,
   Cloud,
+  Sparkles,
 } from 'lucide-react';
 import { contentRepository } from '../../services/contentRepository';
 import { formatDateWITA } from '../../utils/date';
 import { News, ProfileContact } from '../../types/content';
 
 export const AdminDashboardPage: React.FC = () => {
+  const [servicesCount, setServicesCount] = useState(0);
   const [newsCount, setNewsCount] = useState(0);
   const [agendaCount, setAgendaCount] = useState(0);
   const [pubCount, setPubCount] = useState(0);
@@ -27,6 +29,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [profile, setProfile] = useState<ProfileContact | null>(null);
 
   useEffect(() => {
+    contentRepository.getServices().then((data) => setServicesCount(data.length));
     contentRepository.listNews().then((data) => {
       setNewsCount(data.length);
       setLatestNews(data.slice(0, 5));
@@ -80,7 +83,20 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* Kartu Metrik Konten */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <Link
+          to="/admin/layanan"
+          className="bg-surface-container-lowest p-5 rounded-2xl border border-border-subtle hover:border-secondary transition-all shadow-xs flex flex-col gap-2 group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gold-light text-tertiary flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-kaltim-gold" />
+          </div>
+          <span className="text-2xl font-heading font-extrabold text-primary group-hover:text-secondary">
+            {servicesCount}
+          </span>
+          <span className="text-xs text-text-muted font-medium">Layanan Publik</span>
+        </Link>
+
         <Link
           to="/admin/berita"
           className="bg-surface-container-lowest p-5 rounded-2xl border border-border-subtle hover:border-secondary transition-all shadow-xs flex flex-col gap-2 group"
@@ -135,7 +151,7 @@ export const AdminDashboardPage: React.FC = () => {
 
         <Link
           to="/admin/galeri"
-          className="bg-surface-container-lowest p-5 rounded-2xl border border-border-subtle hover:border-secondary transition-all shadow-xs flex flex-col gap-2 group col-span-2 sm:col-span-1"
+          className="bg-surface-container-lowest p-5 rounded-2xl border border-border-subtle hover:border-secondary transition-all shadow-xs flex flex-col gap-2 group"
         >
           <div className="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center">
             <Video className="w-5 h-5" />
@@ -159,6 +175,22 @@ export const AdminDashboardPage: React.FC = () => {
             >
               <Sliders className="w-4 h-4 text-secondary flex-shrink-0" />
               <span>Edit Tampilan & Konten Website (Hero, Slider, Sambutan, Sidebar, Footer)</span>
+            </Link>
+
+            <Link
+              to="/admin/layanan"
+              className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-primary font-heading font-semibold text-xs transition-colors"
+            >
+              <Sparkles className="w-4 h-4 text-secondary" />
+              <span>Kelola & Sesuaikan Layanan Publik</span>
+            </Link>
+
+            <Link
+              to="/admin/pengaturan"
+              className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-primary font-heading font-semibold text-xs transition-colors"
+            >
+              <Settings className="w-4 h-4 text-kaltim-gold" />
+              <span>Kelola Profil, Tupoksi & Struktur Organisasi</span>
             </Link>
 
             <Link

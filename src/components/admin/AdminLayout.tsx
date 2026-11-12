@@ -14,6 +14,7 @@ import {
   X,
   Shield,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { contentRepository } from '../../services/contentRepository';
@@ -21,11 +22,12 @@ import { contentRepository } from '../../services/contentRepository';
 const adminNavItems = [
   { label: 'Ringkasan Dashboard', path: '/admin', end: true, icon: LayoutDashboard },
   { label: 'Edit Tampilan & Konten Web', path: '/admin/tampilan', icon: Sliders },
+  { label: 'Kelola Layanan Publik', path: '/admin/layanan', icon: Sparkles },
   { label: 'Kelola Berita', path: '/admin/berita', icon: Newspaper },
   { label: 'Kelola Agenda', path: '/admin/agenda', icon: Calendar },
   { label: 'Kelola Publikasi & SOP', path: '/admin/publikasi', icon: FileText },
   { label: 'Kelola Galeri & Video', path: '/admin/galeri', icon: Image },
-  { label: 'Pengaturan Profil & Logo', path: '/admin/pengaturan', icon: Settings },
+  { label: 'Pengaturan Profil, Tupoksi & Struktur', path: '/admin/pengaturan', icon: Settings },
 ];
 
 export const AdminLayout: React.FC = () => {
